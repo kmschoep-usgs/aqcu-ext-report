@@ -2,23 +2,23 @@ package gov.usgs.aqcu.parameter;
 
 public class ExtremesRequestParameters extends ReportRequestParameters {
 
-	private String upchainId;
-	private String dvId;
+	private String upchainTimeseriesIdentifier;
+	private String derivedTimeseriesIdentifier;
 
-	public String getUpchainId() {		
-		return upchainId;
+	public String getUpchainTimeseriesIdentifier() {		
+		return upchainTimeseriesIdentifier;
 	}
 
-	public void setUpchainId(String val) {
-		this.upchainId = val;
+	public void setUpchainTimeseriesIdentifier(String val) {
+		this.upchainTimeseriesIdentifier = val;
 	}
 
-	public String getDvId() {
-		return dvId;
+	public String getDerivedTimeseriesIdentifier() {
+		return derivedTimeseriesIdentifier;
 	}
 
-	public void setDvId(String dvId) {
-		this.dvId = dvId;
+	public void setDerivedTimeseriesIdentifier(String dvId) {
+		this.derivedTimeseriesIdentifier = dvId;
 	}
 
 }
