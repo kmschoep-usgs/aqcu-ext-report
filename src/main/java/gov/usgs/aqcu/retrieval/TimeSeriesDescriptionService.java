@@ -52,14 +52,14 @@ public class TimeSeriesDescriptionService {
 			timeseriesIdentifiers.add(requestParameters.getPrimaryTimeseriesIdentifier());
 		}
 
-		if (StringUtils.isNotBlank(requestParameters.getDvId())
-				&& !timeseriesIdentifiers.contains(requestParameters.getDvId())) {
-			timeseriesIdentifiers.add(requestParameters.getDvId());
+		if (StringUtils.isNotBlank(requestParameters.getDerivedTimeseriesIdentifier())
+				&& !timeseriesIdentifiers.contains(requestParameters.getDerivedTimeseriesIdentifier())) {
+			timeseriesIdentifiers.add(requestParameters.getDerivedTimeseriesIdentifier());
 		}
 
-		if (StringUtils.isNotBlank(requestParameters.getUpchainId())
-				&& !timeseriesIdentifiers.contains(requestParameters.getUpchainId())) {
-			timeseriesIdentifiers.add(requestParameters.getUpchainId());
+		if (StringUtils.isNotBlank(requestParameters.getUpchainTimeseriesIdentifier())
+				&& !timeseriesIdentifiers.contains(requestParameters.getUpchainTimeseriesIdentifier())) {
+			timeseriesIdentifiers.add(requestParameters.getUpchainTimeseriesIdentifier());
 		}
 
 		return timeseriesIdentifiers;
