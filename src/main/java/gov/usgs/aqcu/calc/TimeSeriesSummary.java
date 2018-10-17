@@ -1,5 +1,6 @@
 package gov.usgs.aqcu.calc;
 
+import java.time.ZoneOffset;
 import java.time.temporal.Temporal;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -133,9 +134,10 @@ public class TimeSeriesSummary {
 	
 			relativeSummaries.put(comparator, combinedRelativeSummaries.get(comparator));
 			
-			result.add(new TimeSeriesSummary(null, null, 
-					seriesData.getQualifiers(), seriesSummary, relativeSummaries));
+			
 			}
+		result.add(new TimeSeriesSummary(null, null, 
+				filterQualifiers(seriesSummary, seriesData.getQualifiers()), seriesSummary, relativeSummaries));
 		
 		return result;
 	}
@@ -164,6 +166,21 @@ public class TimeSeriesSummary {
 		return relatedExtremesPoints;
 	}
 
+	public static List<Qualifier> filterQualifiers(Map<OrderingComparators, List<ExtremesPoint>> seriesSummaryPoints, List<Qualifier> qualifiers){
+		List<ExtremesPoint> extremesPoints = new ArrayList<>();
+		List<Qualifier> result = new ArrayList<>();
+		if (qualifiers != null) {
+		extremesPoints.addAll(seriesSummaryPoints.get(OrderingComparators.MAX));
+		extremesPoints.addAll(seriesSummaryPoints.get(OrderingComparators.MIN));
+			for (ExtremesPoint point: extremesPoints) {
+				result = qualifiers.stream()
+						.filter(q -> (q.getStartTime().isBefore(point.getTime()) && q.getEndTime().isAfter(point.getTime()) ) ||
+								(q.getStartTime().equals(point.getTime()) || q.getEndTime().equals(point.getTime())))
+						.collect(Collectors.toList());
+			}
+		}
+		return result;
+	}
 	/**
 	 *
 	 * @return The start time of the summary period

@@ -1,12 +1,9 @@
 package gov.usgs.aqcu.model;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.time.LocalDate;
-import java.time.temporal.Temporal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -20,10 +17,10 @@ public class ExtremesMinMaxTest {
 	private Map<String, List<ExtremesPoint>> minPoints;
 	private Map<String, List<ExtremesPoint>> maxPoints;
 	private List<ExtremesPoint> listPoints;
-	private Temporal time1 = LocalDate.parse("2000-01-01");
-	private Temporal time2 = LocalDate.parse("2010-01-01");
-	private Temporal time3 = LocalDate.parse("2010-01-01");
-	private Temporal time4 = LocalDate.parse("2018-01-01");
+	private Instant time1 = Instant.parse("2000-01-01T09:32:00Z");
+	private Instant time2 = Instant.parse("2010-01-01T09:32:00Z");
+	private Instant time3 = Instant.parse("2010-01-01T09:32:00Z");
+	private Instant time4 = Instant.parse("2018-01-01T09:32:00Z");
 	private BigDecimal value1 = new BigDecimal("1.2");
 	private BigDecimal value2 = new BigDecimal("3.2");
 	private BigDecimal value3 = new BigDecimal("1745.62");

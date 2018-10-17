@@ -228,7 +228,7 @@ public class ReportBuilderService {
 				.filter(x -> x.getValue().getNumeric() != null)
 				.map(x -> {
 					ExtremesPoint extPoint = new ExtremesPoint();
-					extPoint.setTime(AqcuTimeUtils.getTemporal(x.getTimestamp(), isDaily, zoneOffset));
+					extPoint.setTime(x.getTimestamp().getDateTimeOffset());
 					extPoint.setValue(DoubleWithDisplayUtil.getRoundedValue(x.getValue()));
 					return extPoint;
 				})
