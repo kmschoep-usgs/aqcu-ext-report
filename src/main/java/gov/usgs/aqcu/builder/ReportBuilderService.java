@@ -77,18 +77,17 @@ public class ReportBuilderService {
 		//Time Series Corrected Data for Primary
 		TimeSeriesCorrectedData primaryData = buildTimeSeriesCorrectedData(timeSeriesDescriptions,
 				requestParameters.getPrimaryTimeseriesIdentifier(), requestParameters);
-		qualifiers.addAll(addQualifiers(primaryData.getQualifiers()));
 		
 		//Time Series Corrected Metadata and Data for derived
 		if (timeSeriesDescriptions.containsKey(requestParameters.getDerivedTimeseriesIdentifier())) {
 			//corrected data
 			dvData = buildTimeSeriesCorrectedData(timeSeriesDescriptions,
 					requestParameters.getDerivedTimeseriesIdentifier(), requestParameters);
-			qualifiers.addAll(addQualifiers(dvData.getQualifiers()));
 			// get min/max of derived series
 			MinMaxSummary dvMinMaxSummary = getSummary(dvData);
 			// min/max primary
 			derivedMinMax = minMaxBuilderService.getMinMaxSummary(dvMinMaxSummary, dvData.getName(), null, null);
+			qualifiers.addAll(addQualifiers(derivedMinMax.getQualifiers()));
 			report.setDv(derivedMinMax);
 		}
 				
@@ -98,16 +97,16 @@ public class ReportBuilderService {
 			//corrected data
 			upchainData = buildTimeSeriesCorrectedData(timeSeriesDescriptions,
 					requestParameters.getUpchainTimeseriesIdentifier(), requestParameters);
-			qualifiers.addAll(addQualifiers(upchainData.getQualifiers()));
 			
 			// get min/max of primary series and upchain series
 			MinMaxSummary primaryMinMaxSummary = getSummary(primaryData, upchainData);
 			
 			// min/max primary, related upchain
 			primaryMinMax = minMaxBuilderService.getMinMaxSummary(primaryMinMaxSummary, primaryData.getName(), upchainData.getName(), UPCHAIN);
-			
+			qualifiers.addAll(addQualifiers(primaryMinMax.getQualifiers()));
 			// min/max upchain, related primary
 			upchainMinMax = minMaxBuilderService.getMinMaxSummary(primaryMinMaxSummary, upchainData.getName(), primaryData.getName(), PRIMARY);
+			qualifiers.addAll(addQualifiers(upchainMinMax.getQualifiers()));
 			report.setPrimary(primaryMinMax);
 			report.setUpchain(upchainMinMax);
 		} else {
