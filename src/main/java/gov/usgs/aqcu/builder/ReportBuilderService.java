@@ -140,6 +140,7 @@ public class ReportBuilderService {
 		metadata.setStationId(primarySeriesDescription.getLocationIdentifier());
 		metadata.setStationName(locationDescriptionListService.getByLocationIdentifier(primarySeriesDescription.getLocationIdentifier()).getName());
 		metadata.setPrimaryParameter(primarySeriesDescription.getParameter());
+		metadata.setPrimaryUnit(primarySeriesDescription.getUnit());
 		metadata.setPrimaryLabel(primarySeriesDescription.getIdentifier());
 		metadata.setTimezone(AqcuTimeUtils.getTimezone(primarySeriesDescription.getUtcOffset()));
 		
