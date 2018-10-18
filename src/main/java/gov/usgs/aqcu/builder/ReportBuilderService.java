@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -139,7 +140,7 @@ public class ReportBuilderService {
 		metadata.setStationId(primarySeriesDescription.getLocationIdentifier());
 		metadata.setStationName(locationDescriptionListService.getByLocationIdentifier(primarySeriesDescription.getLocationIdentifier()).getName());
 		metadata.setPrimaryParameter(primarySeriesDescription.getParameter());
-		metadata.setPrimaryLabel(primarySeriesDescription.getLabel());
+		metadata.setPrimaryLabel(primarySeriesDescription.getIdentifier());
 		metadata.setTimezone(AqcuTimeUtils.getTimezone(primarySeriesDescription.getUtcOffset()));
 		
 		if (timeSeriesDescriptions.containsKey(requestParameters.getDerivedTimeseriesIdentifier())) {
@@ -227,7 +228,7 @@ public class ReportBuilderService {
 				.filter(x -> x.getValue().getNumeric() != null)
 				.map(x -> {
 					ExtremesPoint extPoint = new ExtremesPoint();
-					extPoint.setTime(x.getTimestamp().getDateTimeOffset());
+					extPoint.setTime(isDaily ? x.getTimestamp().getDateTimeOffset().minus(1, ChronoUnit.DAYS) : x.getTimestamp().getDateTimeOffset());
 					extPoint.setValue(DoubleWithDisplayUtil.getRoundedValue(x.getValue()));
 					return extPoint;
 				})
