@@ -27,10 +27,10 @@ public class MinMaxBuilderService {
 			ExtremesMinMax result = new ExtremesMinMax();
 			Map<String, List<ExtremesPoint>> maxSummary = new HashMap<>();
 			Map<String, List<ExtremesPoint>> minSummary = new HashMap<>();
-			// max primary, related upchain
+			// max primary, related 
 			maxSummary = getPoints(MAX, minMaxSummary, primarySeriesIdentifier, relatedSeriesIdentifier, related);
 					
-			//min primary, related upchain
+			//min primary, related 
 			minSummary = getPoints(MIN, minMaxSummary, primarySeriesIdentifier, relatedSeriesIdentifier, related);
 			
 			result.setMax(maxSummary);
