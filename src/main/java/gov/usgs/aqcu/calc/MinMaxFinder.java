@@ -1,13 +1,9 @@
 package gov.usgs.aqcu.calc;
 
-import static gov.usgs.aqcu.calc.OrderingComparators.MAX;
-import static gov.usgs.aqcu.calc.OrderingComparators.MIN;
-
 import gov.usgs.aqcu.model.ExtremesPoint;
 import gov.usgs.aqcu.model.TimeSeriesCorrectedData;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -68,7 +64,7 @@ public class MinMaxFinder {
 		
 		for (String series : timeseries.keySet()) {
 			TimeSeriesSummary summary = new TimeSeriesSummary();
-			List<TimeSeriesSummary> summaries = TimeSeriesSummary.calculateSummaries(timeseries, series, true, 1);
+			List<TimeSeriesSummary> summaries = TimeSeriesSummary.calculateSummaries(timeseries, series);
 			if (null != summaries && !summaries.isEmpty()) {
 				summary = summaries.get(0);
 			}
@@ -210,107 +206,4 @@ public class MinMaxFinder {
 		return result;
 	}
 
-	/**
-	 * 
-	 * @param timeSeriesId The timeseries identifier to get the temporals of the max values from
-	 * @return A list of the temporals for the max values of the specified time series
-	 */
-	public List<Temporal> getTemporalsOfMax(String timeSeriesId) {
-		return getTemporals(timeSeriesId, MAX);
-	}
-
-	/**
-	 *
-	 * @param timeSeriesId The timeseries identifier to get the max value from
-	 * @return The unique maximum value from the specified timeseries
-	 */
-	public String getMaxValue(String timeSeriesId) {
-		return getUniqueExtremeValue(timeSeriesId, MAX);
-	}
-
-	/**
-	 *
-	 * @param fromTimeSeriesId The timeseries idenfitier to get the corresponding value from
-	 * @param atMaxTimeseriesId The timeseries to get the maximum temporal time from
-	 * @return The list of corresponding values
-	 */
-	public List<String> getCorrespondingValueAtMaxOf(String fromTimeSeriesId, String atMaxTimeseriesId) {
-		return getCorrespondingValueAtMinOf(fromTimeSeriesId, atMaxTimeseriesId, MAX);
-	}
-
-	/**
-	 *
-	 * @param timeSeriesId The time series to get the min temporals from
-	 * @return The list of all temporals of the min value
-	 */
-	public List<Temporal> getTemporalsOfMin(String timeSeriesId) {
-		return getTemporals(timeSeriesId, MIN);
-	}
-
-	/**
-	 *
-	 * @param timeSeriesId The time series to get the min value from
-	 * @return The minimum value in the provided timeseries
-	 */
-	public String getMinValue(String timeSeriesId) {
-		return getUniqueExtremeValue(timeSeriesId, MIN);
-	}
-
-	/**
-	 *
-	 * @param fromTimeSeriesId The timeseries idenfitier to get the corresponding value from
-	 * @param atMinTimeSeriesId The timeseries to get the minimum temporal time from
-	 * @return The list of corresponding values
-	 */
-	public List<String> getCorrespondingValueAtMinOf(String fromTimeSeriesId, String atMinTimeSeriesId) {
-		return getCorrespondingValueAtMinOf(fromTimeSeriesId, atMinTimeSeriesId, MIN);
-	}
-	
-	private List<String> getCorrespondingValueAtMinOf(String fromTimeSeriesId, String toTimeSeriesId, OrderingComparators comparator) {
-		List<String> result = new ArrayList<>();
-		if (null != calculatedSummary) {
-			List<ExtremesPoint> points = calculatedSummary.getAt(comparator, toTimeSeriesId, fromTimeSeriesId);
-			for(ExtremesPoint point : points) {
-				if (null != point) {
-					result.add("" + getAs(point.getValue()));
-				}
-			}
-		}
-		return result;
-	}
-	
-	private List<Temporal> getTemporals(String timeSeriesId, OrderingComparators comparator) {
-		List<Temporal> result = new ArrayList<>();
-		if (null != calculatedSummary) {
-			List<ExtremesPoint> points = calculatedSummary.get(comparator, timeSeriesId);
-			for(ExtremesPoint point : points) {
-				if (null != point && null != point.getTime()) {
-					result.add(point.getTime());
-				}
-			}
-		}
-		return result;
-	}
-	private String getUniqueExtremeValue(String timeSeriesId, OrderingComparators comparator) {
-		String result = null;
-		if (null != calculatedSummary) {
-			List<ExtremesPoint> points = calculatedSummary.get(comparator, timeSeriesId);
-			
-			if (null != points && points.size() > 0) {
-				//verify all values are the same in the set
-				for(int i = 0; i < points.size(); i++) {
-					ExtremesPoint p = points.get(i);
-					if(points.size() > 1 
-							&& p != null 
-							&& points.get(i + 1) != null
-							&& !p.equals(points.get(i + 1))) { //if this is different than the next value, throw exception
-						throw new RuntimeException("Multiple " + comparator + " values exist in a tied set");
-					} else {
-						result = "" + getAs(p.getValue());
-					}
-				}
-			}
-		}
-		return result;
-	}
 }
