@@ -40,7 +40,6 @@ public class ReportBuilderService {
 	private LocationDescriptionListService locationDescriptionListService;
 	private MinMaxBuilderService minMaxBuilderService;
 	private TimeSeriesDescriptionListService timeSeriesDescriptionListService;
-	private TimeSeriesDescriptionService timeSeriesDescriptionService;
 	private TimeSeriesDataCorrectedService timeSeriesDataCorrectedService;
 	private QualifierLookupService qualifierLookupService;
 
@@ -49,13 +48,11 @@ public class ReportBuilderService {
 		LocationDescriptionListService locationDescriptionListService,
 		MinMaxBuilderService minMaxBuilderService,
 		TimeSeriesDescriptionListService timeSeriesDescriptionListService,
-		TimeSeriesDescriptionService timeSeriesDescriptionService,
 		TimeSeriesDataCorrectedService timeSeriesDataCorrectedService,
 		QualifierLookupService qualifierLookupService) {
 		this.locationDescriptionListService = locationDescriptionListService;
 		this.minMaxBuilderService = minMaxBuilderService;
 		this.timeSeriesDescriptionListService = timeSeriesDescriptionListService;
-		this.timeSeriesDescriptionService = timeSeriesDescriptionService;
 		this.timeSeriesDataCorrectedService = timeSeriesDataCorrectedService;
 		this.qualifierLookupService = qualifierLookupService;
 	}
@@ -63,8 +60,10 @@ public class ReportBuilderService {
 	public ExtremesReport buildReport(ExtremesRequestParameters requestParameters, String requestingUser) {
 		ExtremesReport report = new ExtremesReport();
 
-		Map<String, TimeSeriesDescription> timeSeriesDescriptions = timeSeriesDescriptionService
-				.getTimeSeriesDescriptions(requestParameters);
+		Map<String, TimeSeriesDescription> timeSeriesDescriptions = timeSeriesDescriptionListService
+				.getTimeSeriesDescriptions(requestParameters.getPrimaryTimeseriesIdentifier(), 
+						requestParameters.getUpchainTimeseriesIdentifier(), 
+						requestParameters.getDerivedTimeseriesIdentifier());
 		List<Qualifier> qualifiers = new ArrayList<>();
 		TimeSeriesCorrectedData upchainData = new TimeSeriesCorrectedData();
 		TimeSeriesCorrectedData dvData = new TimeSeriesCorrectedData();
