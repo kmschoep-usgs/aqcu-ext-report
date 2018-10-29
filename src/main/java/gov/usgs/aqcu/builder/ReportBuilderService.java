@@ -40,8 +40,7 @@ public class ReportBuilderService {
 	private LocationDescriptionListService locationDescriptionListService;
 	private MinMaxBuilderService minMaxBuilderService;
 	private TimeSeriesDescriptionListService timeSeriesDescriptionListService;
-	private TimeSeriesDescriptionService timeSeriesDescriptionService;
-	private TimeSeriesDataCorrectedService timeSeriesDataCorrectedService;
+	private TimeSeriesDataService timeSeriesDataService;
 	private QualifierLookupService qualifierLookupService;
 
 	@Autowired
@@ -49,31 +48,30 @@ public class ReportBuilderService {
 		LocationDescriptionListService locationDescriptionListService,
 		MinMaxBuilderService minMaxBuilderService,
 		TimeSeriesDescriptionListService timeSeriesDescriptionListService,
-		TimeSeriesDescriptionService timeSeriesDescriptionService,
-		TimeSeriesDataCorrectedService timeSeriesDataCorrectedService,
+		TimeSeriesDataService timeSeriesDataService,
 		QualifierLookupService qualifierLookupService) {
 		this.locationDescriptionListService = locationDescriptionListService;
 		this.minMaxBuilderService = minMaxBuilderService;
 		this.timeSeriesDescriptionListService = timeSeriesDescriptionListService;
-		this.timeSeriesDescriptionService = timeSeriesDescriptionService;
-		this.timeSeriesDataCorrectedService = timeSeriesDataCorrectedService;
+		this.timeSeriesDataService = timeSeriesDataService;
 		this.qualifierLookupService = qualifierLookupService;
 	}
 
 	public ExtremesReport buildReport(ExtremesRequestParameters requestParameters, String requestingUser) {
 		ExtremesReport report = new ExtremesReport();
-
-		Map<String, TimeSeriesDescription> timeSeriesDescriptions = timeSeriesDescriptionService
-				.getTimeSeriesDescriptions(requestParameters);
 		List<Qualifier> qualifiers = new ArrayList<>();
 		TimeSeriesCorrectedData upchainData = new TimeSeriesCorrectedData();
 		TimeSeriesCorrectedData dvData = new TimeSeriesCorrectedData();
 		ExtremesMinMax primaryMinMax = new ExtremesMinMax();
 		ExtremesMinMax upchainMinMax = new ExtremesMinMax();
 		ExtremesMinMax derivedMinMax = new ExtremesMinMax();
+
+		// All TS Metadata
+		Map<String, TimeSeriesDescription> timeSeriesDescriptions = timeSeriesDescriptionListService.getTimeSeriesDescriptionList(new ArrayList<>(requestParameters.getTsIdSet()))
+			.stream().collect(Collectors.toMap(t -> t.getUniqueId(), t -> t));
 		
 		//Primary TS Metadata
-		TimeSeriesDescription primaryDescription = timeSeriesDescriptionListService.getTimeSeriesDescription(requestParameters.getPrimaryTimeseriesIdentifier());
+		TimeSeriesDescription primaryDescription = timeSeriesDescriptions.get(requestParameters.getPrimaryTimeseriesIdentifier());
 		
 		//Time Series Corrected Data for Primary
 		TimeSeriesCorrectedData primaryData = buildTimeSeriesCorrectedData(timeSeriesDescriptions,
@@ -179,8 +177,8 @@ public class ReportBuilderService {
 		if (timeSeriesDescriptions != null && timeSeriesDescriptions.containsKey(timeSeriesIdentifier)) {
 			boolean isDaily = TimeSeriesUtils.isDailyTimeSeries(timeSeriesDescriptions.get(timeSeriesIdentifier));
 			ZoneOffset zoneOffset = TimeSeriesUtils.getZoneOffset(timeSeriesDescriptions.get(timeSeriesIdentifier));
-			TimeSeriesDataServiceResponse timeSeriesDataServiceResponse = timeSeriesDataCorrectedService
-					.get(timeSeriesIdentifier, requestParameters, isDaily, zoneOffset);
+			TimeSeriesDataServiceResponse timeSeriesDataServiceResponse = timeSeriesDataService
+					.get(timeSeriesIdentifier, requestParameters,  zoneOffset, isDaily, false, false, null);
 
 			if (timeSeriesDataServiceResponse != null) {
 				timeSeriesCorrectedData = createTimeSeriesCorrectedData(timeSeriesDataServiceResponse, isDaily,
