@@ -39,15 +39,16 @@ public class TimeSeriesSummaryTest {
 	protected static final String DISCHARGE = "DISCHARGE";
 	protected static final String STAGE = "STAGE";
 	protected static final String DAILYDISCHARGE = "DAILYDISCHARGE";
-	private static final Qualifier qualifier1 = new Qualifier();
-	private static final Qualifier qualifier2 = new Qualifier();
-	private static final Qualifier qualifier3 = new Qualifier();
-	private static final ArrayList<Qualifier> qualifiers = new ArrayList<>();
+	private static Qualifier qualifier1 = new Qualifier();
+	private static Qualifier qualifier2 = new Qualifier();
+	private static Qualifier qualifier3 = new Qualifier();
+	private static ArrayList<Qualifier> qualifiers = new ArrayList<>();
 	
 	private static Map<String, TimeSeriesCorrectedData> incomingDefaultCalculateSummariesTimeSeries = new HashMap<>();
 	private static Map<String, TimeSeriesCorrectedData> incomingDefaultCalculateSummariesWithRelativesTimeSeries = new HashMap<>();
 	private static Map<String, TimeSeriesCorrectedData> incomingMultipleCalculateSummariesWithRelativesTimeSeries = new HashMap<>();
 	private static Map<OrderingComparators, List<ExtremesPoint>> incomingDefaultFilterQualifiersTimeSeriesPoints = new HashMap<>();
+	private static Map<OrderingComparators, List<ExtremesPoint>> incomingEdgeFilterQualifiersTimeSeriesPoints = new HashMap<>();
 	private static List<TimeSeriesSummary> expectedDefaultCalculateSummaries = new ArrayList<>();
 	private static List<TimeSeriesSummary> expectedDefaultCalculateSummariesWithRelatives = new ArrayList<>();
 	private static List<TimeSeriesSummary> expectedMultipleCalculateSummariesWithRelatives = new ArrayList<>();	
@@ -65,6 +66,10 @@ public class TimeSeriesSummaryTest {
 	
 	@Before
 	public void setUp() {
+		qualifier1 = new Qualifier();
+		qualifier2 = new Qualifier();
+		qualifier3 = new Qualifier();
+		qualifiers = new ArrayList<>();
 		
 		incomingDefaultCalculateSummariesTimeSeries = new ImmutableMap.Builder<String, TimeSeriesCorrectedData>()
 				.put(DISCHARGE, new TimeSeriesCorrectedData()
@@ -205,6 +210,11 @@ public class TimeSeriesSummaryTest {
 				.put(OrderingComparators.MAX, Arrays.asList(new ExtremesPoint[] { new ExtremesPoint().setTime(baseTime.minus(3, ChronoUnit.HOURS)).setValue(new BigDecimal("19.0")) }))
 				.put(OrderingComparators.MIN, Arrays.asList(new ExtremesPoint[] { new ExtremesPoint().setTime(baseTime.minus(5, ChronoUnit.HOURS)).setValue(new BigDecimal("12.0")) }))
 				.build();
+		
+		incomingEdgeFilterQualifiersTimeSeriesPoints = new ImmutableMap.Builder<OrderingComparators, List<ExtremesPoint>>()
+				.put(OrderingComparators.MAX, Arrays.asList(new ExtremesPoint[] { new ExtremesPoint().setTime(Instant.parse("2018-08-02T05:00:00Z")).setValue(new BigDecimal("19.0")) }))
+				.put(OrderingComparators.MIN, Arrays.asList(new ExtremesPoint[] { new ExtremesPoint().setTime(baseTime.minus(5, ChronoUnit.HOURS)).setValue(new BigDecimal("12.0")) }))
+				.build();
 	}
 	
 	@After
@@ -323,6 +333,25 @@ public class TimeSeriesSummaryTest {
 		assertEquals(2, result.size());
 		assertEquals("MIN_MAX", result.get(0).getIdentifier());
 		assertEquals("EQUAL_MIN", result.get(1).getIdentifier());
+	}
+	
+	/**
+	 * Test of calculateSummaries method, of class TimeSeriesSummary.
+	 */
+	@Test
+	public void testEdgeFilterQualifiers() {
+		log.debug("testEdgeFilterQualifiers");
+		qualifier1.setDateApplied(Instant.parse("2014-10-28T09:53:00Z"));
+		qualifier1.setIdentifier("MIN_MAX");
+		qualifier1.setStartTime(Instant.parse("2018-08-02T05:00:00Z"));
+		qualifier1.setEndTime(Instant.parse("2018-08-02T05:00:00.000000100Z"));
+		
+		qualifiers.add(qualifier1);
+		
+		Map<OrderingComparators, List<ExtremesPoint>> extremePoints = incomingEdgeFilterQualifiersTimeSeriesPoints;
+		List<Qualifier> result = TimeSeriesSummary.filterQualifiers(extremePoints, qualifiers);
+		assertEquals(1, result.size());
+		assertEquals("MIN_MAX", result.get(0).getIdentifier());
 	}
 
 }

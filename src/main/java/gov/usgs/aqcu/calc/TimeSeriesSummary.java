@@ -168,18 +168,25 @@ public class TimeSeriesSummary {
 
 	public static List<Qualifier> filterQualifiers(Map<OrderingComparators, List<ExtremesPoint>> seriesSummaryPoints, List<Qualifier> qualifiers){
 		List<ExtremesPoint> extremesPoints = new ArrayList<>();
-		List<Qualifier> result = new ArrayList<>();
+		List<Qualifier> results = new ArrayList<>();
 		if (qualifiers != null) {
 		extremesPoints.addAll(seriesSummaryPoints.get(OrderingComparators.MAX));
 		extremesPoints.addAll(seriesSummaryPoints.get(OrderingComparators.MIN));
 			for (ExtremesPoint point: extremesPoints) {
-				result = qualifiers.stream()
-						.filter(q -> (q.getStartTime().isBefore(point.getTime()) && q.getEndTime().isAfter(point.getTime()) ) ||
-								(q.getStartTime().equals(point.getTime()) || q.getEndTime().equals(point.getTime())))
+				List<Qualifier> pointResult = new ArrayList<>();
+				pointResult = qualifiers.stream()
+						.filter(s -> !results.contains(s))
+						.filter(
+								q -> (q.getStartTime().isBefore(point.getTime()) || q.getStartTime().equals(point.getTime())) 
+								&& (q.getEndTime().isAfter(point.getTime()) || q.getEndTime().equals(point.getTime()))
+								)
 						.collect(Collectors.toList());
+				if (!pointResult.isEmpty() && pointResult != null) {
+					results.addAll(pointResult);
+				}
 			}
 		}
-		return result;
+		return results;
 	}
 	/**
 	 *
