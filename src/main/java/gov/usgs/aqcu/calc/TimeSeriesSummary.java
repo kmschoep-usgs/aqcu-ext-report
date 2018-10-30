@@ -1,5 +1,6 @@
 package gov.usgs.aqcu.calc;
 
+import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.temporal.Temporal;
 import java.util.ArrayList;
@@ -12,9 +13,11 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.aquaticinformatics.aquarius.sdk.timeseries.servicemodels.Publish.Qualifier;
+import com.aquaticinformatics.aquarius.sdk.timeseries.servicemodels.Publish.TimeSeriesPoint;
 
 import gov.usgs.aqcu.model.ExtremesPoint;
 import gov.usgs.aqcu.model.TimeSeriesCorrectedData;
+import gov.usgs.aqcu.util.DoubleWithDisplayUtil;
 
 /**
  * Produces a summarized version of the time series including min and max points.
@@ -27,8 +30,8 @@ public class TimeSeriesSummary {
 	private Temporal endTime;
 	private List<Qualifier> qualifiers;
 
-	private final Map<OrderingComparators, List<ExtremesPoint>> theseExtremesPoints;
-	private final Map<OrderingComparators, Map<String, List<ExtremesPoint>>> relativeExtremesPoints;
+	private final Map<OrderingComparators, List<TimeSeriesPoint>> theseExtremesPoints;
+	private final Map<OrderingComparators, Map<String, List<TimeSeriesPoint>>> relativeExtremesPoints;
 
 	/**
 	 * Default Constructor
@@ -47,8 +50,8 @@ public class TimeSeriesSummary {
 	 * @param relativeSummaries The map of time series points that are relative to the primary provided set
 	 */
 	protected TimeSeriesSummary(Temporal startTime, Temporal endTime, List<Qualifier> qualifiers,
-			Map<OrderingComparators, List<ExtremesPoint>> thisSummaries, 
-			Map<OrderingComparators, Map<String, List<ExtremesPoint>>> relativeSummaries) {
+			Map<OrderingComparators, List<TimeSeriesPoint>> thisSummaries, 
+			Map<OrderingComparators, Map<String, List<TimeSeriesPoint>>> relativeSummaries) {
 		
 		this.setStartTime(startTime);
 		this.setEndTime(endTime);
@@ -57,15 +60,15 @@ public class TimeSeriesSummary {
 		if (null != thisSummaries) {
 			this.theseExtremesPoints = Collections.unmodifiableMap(thisSummaries);
 		} else {
-			this.theseExtremesPoints = Collections.<OrderingComparators, List<ExtremesPoint>>emptyMap();
+			this.theseExtremesPoints = Collections.<OrderingComparators, List<TimeSeriesPoint>>emptyMap();
 		}
 
 		if (null != relativeSummaries) {
 			this.relativeExtremesPoints = Collections.unmodifiableMap(relativeSummaries);
 		} else {
-			Map<OrderingComparators, Map<String, List<ExtremesPoint>>> relative = new LinkedHashMap<>();
-			relative.put(OrderingComparators.MAX, Collections.<String, List<ExtremesPoint>>emptyMap());
-			relative.put(OrderingComparators.MIN, Collections.<String, List<ExtremesPoint>>emptyMap());
+			Map<OrderingComparators, Map<String, List<TimeSeriesPoint>>> relative = new LinkedHashMap<>();
+			relative.put(OrderingComparators.MAX, Collections.<String, List<TimeSeriesPoint>>emptyMap());
+			relative.put(OrderingComparators.MIN, Collections.<String, List<TimeSeriesPoint>>emptyMap());
 			this.relativeExtremesPoints = Collections.unmodifiableMap(relative);
 		}
 	}
@@ -76,8 +79,8 @@ public class TimeSeriesSummary {
 	 * @param comparator The comparator to use to select a series (min or max)
 	 * @return The list of ExtremesPoint objects associated with the provided comparator
 	 */
-	public List<ExtremesPoint> get(OrderingComparators comparator) {
-		List<ExtremesPoint> result = null;
+	public List<TimeSeriesPoint> get(OrderingComparators comparator) {
+		List<TimeSeriesPoint> result = null;
 		result = theseExtremesPoints.get(comparator);
 		return result;
 	}
@@ -91,8 +94,8 @@ public class TimeSeriesSummary {
 	 * @return The list of ExtremesPoint objects associated with the provided comparator
 	 * and relative to the provided ExtremesPoint. 
 	 */
-	public List<ExtremesPoint> getAt(OrderingComparators comparator, String getExtremesPointSeries) {
-		List<ExtremesPoint> result = null;
+	public List<TimeSeriesPoint> getAt(OrderingComparators comparator, String getExtremesPointSeries) {
+		List<TimeSeriesPoint> result = null;
 		result = relativeExtremesPoints.get(comparator).get(getExtremesPointSeries);
 		return result;
 	}
@@ -107,28 +110,28 @@ public class TimeSeriesSummary {
 	 */
 	public static List<TimeSeriesSummary> calculateSummaries(final Map<String, TimeSeriesCorrectedData> timeseries, final String seriesIdentifier) {
 		List<TimeSeriesSummary> result = new ArrayList<>();
-		Map<OrderingComparators, List<ExtremesPoint>> seriesSummary = new LinkedHashMap<>();
-		Map<OrderingComparators, Map<String, List<ExtremesPoint>>> combinedRelativeSummaries = new LinkedHashMap<>();
-		Map<OrderingComparators, Map<String, List<ExtremesPoint>>> relativeSummaries = new LinkedHashMap<>();
+		Map<OrderingComparators, List<TimeSeriesPoint>> seriesSummary = new LinkedHashMap<>();
+		Map<OrderingComparators, Map<String, List<TimeSeriesPoint>>> combinedRelativeSummaries = new LinkedHashMap<>();
+		Map<OrderingComparators, Map<String, List<TimeSeriesPoint>>> relativeSummaries = new LinkedHashMap<>();
 		TimeSeriesCorrectedData seriesData = timeseries.get(seriesIdentifier);
-		List<ExtremesPoint> listPoints = seriesData.getPoints();
-		ExtremesPoint extremePoint = new ExtremesPoint();
+		List<TimeSeriesPoint> listPoints = seriesData.getPoints();
+		TimeSeriesPoint extremePoint = new TimeSeriesPoint();
 		for (OrderingComparators comparator : OrderingComparators.values()) {
 			if (listPoints.size() > 0) {
 				if (comparator.equals(OrderingComparators.MAX)) {
-					extremePoint =  Collections.max(listPoints, Comparator.comparing(s -> s.getValue()));
+					extremePoint =  Collections.max(listPoints, Comparator.comparing(s -> DoubleWithDisplayUtil.getRoundedValue(s.getValue())));
 				} else {
-					extremePoint =  Collections.min(listPoints, Comparator.comparing(s -> s.getValue()));
+					extremePoint =  Collections.min(listPoints, Comparator.comparing(s -> DoubleWithDisplayUtil.getRoundedValue(s.getValue())));
 				}
 			}
-			final ExtremesPoint extremeValue = extremePoint;
+			final TimeSeriesPoint extremeValue = extremePoint;
 			
-			List<ExtremesPoint> matchPoints = listPoints.stream()
-					.filter(point -> point.getValue().equals(extremeValue.getValue()))
+			List<TimeSeriesPoint> matchPoints = listPoints.stream()
+					.filter(point -> DoubleWithDisplayUtil.getRoundedValue(point.getValue()).equals(DoubleWithDisplayUtil.getRoundedValue(extremeValue.getValue())))
 					.collect(Collectors.toList());
 			seriesSummary.put(comparator, matchPoints);
 
-			Map<String, List<ExtremesPoint>> winnersRelativeSummaries = new HashMap<>();
+			Map<String, List<TimeSeriesPoint>> winnersRelativeSummaries = new HashMap<>();
 			winnersRelativeSummaries = calculateRelatedPoints(timeseries, seriesIdentifier, matchPoints);
 			combinedRelativeSummaries.put(comparator, winnersRelativeSummaries);
 	
@@ -142,16 +145,16 @@ public class TimeSeriesSummary {
 		return result;
 	}
 
-	private static Map<String, List<ExtremesPoint>> calculateRelatedPoints(Map<String, TimeSeriesCorrectedData> timeseries, String series, List<ExtremesPoint> comparatorWinners) {
-		Map<String, List<ExtremesPoint>> relatedExtremesPoints = new LinkedHashMap<>();
+	private static Map<String, List<TimeSeriesPoint>> calculateRelatedPoints(Map<String, TimeSeriesCorrectedData> timeseries, String series, List<TimeSeriesPoint> comparatorWinners) {
+		Map<String, List<TimeSeriesPoint>> relatedExtremesPoints = new LinkedHashMap<>();
 		for (String relatedSeries : timeseries.keySet()) {
 			if (!relatedSeries.equals(series)) {
 				TimeSeriesCorrectedData relatedData = timeseries.get(relatedSeries);
-				List<ExtremesPoint> listRelatedPoints = relatedData.getPoints();
-				List<ExtremesPoint> matchingPointsForSeries = new ArrayList<>(); 
-				for (ExtremesPoint comparatorWinner : comparatorWinners) {
-					List<ExtremesPoint> matchingPointsForTime = listRelatedPoints.stream()
-						.filter(point -> point.getTime().equals(comparatorWinner.getTime()))
+				List<TimeSeriesPoint> listRelatedPoints = relatedData.getPoints();
+				List<TimeSeriesPoint> matchingPointsForSeries = new ArrayList<>(); 
+				for (TimeSeriesPoint comparatorWinner : comparatorWinners) {
+					List<TimeSeriesPoint> matchingPointsForTime = listRelatedPoints.stream()
+						.filter(point -> point.getTimestamp().getDateTimeOffset().equals(comparatorWinner.getTimestamp().getDateTimeOffset()))
 						.collect(Collectors.toList());
 					if(matchingPointsForTime.size() > 0) {
 						matchingPointsForSeries.addAll(matchingPointsForTime);
@@ -166,20 +169,27 @@ public class TimeSeriesSummary {
 		return relatedExtremesPoints;
 	}
 
-	public static List<Qualifier> filterQualifiers(Map<OrderingComparators, List<ExtremesPoint>> seriesSummaryPoints, List<Qualifier> qualifiers){
-		List<ExtremesPoint> extremesPoints = new ArrayList<>();
-		List<Qualifier> result = new ArrayList<>();
+	public static List<Qualifier> filterQualifiers(Map<OrderingComparators, List<TimeSeriesPoint>> seriesSummaryPoints, List<Qualifier> qualifiers){
+		List<TimeSeriesPoint> extremesPoints = new ArrayList<>();
+		List<Qualifier> results = new ArrayList<>();
 		if (qualifiers != null) {
 		extremesPoints.addAll(seriesSummaryPoints.get(OrderingComparators.MAX));
 		extremesPoints.addAll(seriesSummaryPoints.get(OrderingComparators.MIN));
-			for (ExtremesPoint point: extremesPoints) {
-				result = qualifiers.stream()
-						.filter(q -> (q.getStartTime().isBefore(point.getTime()) && q.getEndTime().isAfter(point.getTime()) ) ||
-								(q.getStartTime().equals(point.getTime()) || q.getEndTime().equals(point.getTime())))
+			for (TimeSeriesPoint point: extremesPoints) {
+				List<Qualifier> pointResult = new ArrayList<>();
+				pointResult = qualifiers.stream()
+						.filter(s -> !results.contains(s))
+						.filter(
+								q -> (q.getStartTime().isBefore(point.getTimestamp().getDateTimeOffset()) || q.getStartTime().equals(point.getTimestamp().getDateTimeOffset())) 
+								&& (q.getEndTime().isAfter(point.getTimestamp().getDateTimeOffset()) || q.getEndTime().equals(point.getTimestamp().getDateTimeOffset()))
+								)
 						.collect(Collectors.toList());
+				if (!pointResult.isEmpty() && pointResult != null) {
+					results.addAll(pointResult);
+				}
 			}
 		}
-		return result;
+		return results;
 	}
 	/**
 	 *

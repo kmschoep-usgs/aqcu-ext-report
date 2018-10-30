@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.aquaticinformatics.aquarius.sdk.timeseries.servicemodels.Publish.Qualifier;
+import com.aquaticinformatics.aquarius.sdk.timeseries.servicemodels.Publish.TimeSeriesPoint;
 
 /**
  * Given a list of TimeSeries objects (ordered), this class will allow finding
@@ -125,8 +126,8 @@ public class MinMaxFinder {
 		 * @param getTimeSeriesPointSeries The time series identifier to get the points from
 		 * @return
 		 */
-		public List<ExtremesPoint> get(OrderingComparators comparator, String getTimeSeriesPointSeries) {
-			List<ExtremesPoint> result = null;
+		public List<TimeSeriesPoint> get(OrderingComparators comparator, String getTimeSeriesPointSeries) {
+			List<TimeSeriesPoint> result = null;
 			result = this.seriesTimeSeriesPoints.get(getTimeSeriesPointSeries).get(comparator);
 			return result;
 		}
@@ -141,8 +142,8 @@ public class MinMaxFinder {
 		 * the points from the specified relative time series.
 		 * @return The list of TimeSeriesPoint objects matching the provided parameters
 		 */
-		public List<ExtremesPoint> getAt(OrderingComparators comparator, String atTimeSeriesPointSeries, String getTimeSeriesPointSeries) {
-			List<ExtremesPoint> result = null;
+		public List<TimeSeriesPoint> getAt(OrderingComparators comparator, String atTimeSeriesPointSeries, String getTimeSeriesPointSeries) {
+			List<TimeSeriesPoint> result = null;
 			result = this.seriesTimeSeriesPoints.get(atTimeSeriesPointSeries).getAt(comparator, getTimeSeriesPointSeries);
 			return result;
 		}

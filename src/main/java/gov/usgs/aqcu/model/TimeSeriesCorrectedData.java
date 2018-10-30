@@ -4,13 +4,14 @@ import java.time.temporal.Temporal;
 import java.util.List;
 
 import com.aquaticinformatics.aquarius.sdk.timeseries.servicemodels.Publish.Qualifier;
+import com.aquaticinformatics.aquarius.sdk.timeseries.servicemodels.Publish.TimeSeriesPoint;
 
 public class TimeSeriesCorrectedData {
 
 	private Temporal endTime;
 	private boolean isVolumetricFlow;
 	private String name; //not used according to doc, but required per R
-	private List<ExtremesPoint> points;
+	private List<TimeSeriesPoint> points;
 	private List<Qualifier> qualifiers;
 	private Temporal startTime;
 	private String type;
@@ -33,13 +34,6 @@ public class TimeSeriesCorrectedData {
 	}
 	public void setName(String name) {
 		this.name = name;
-	}
-	public List<ExtremesPoint> getPoints() {
-		return points;
-	}
-	public TimeSeriesCorrectedData setPoints(List<ExtremesPoint> points) {
-		this.points = points;
-		return this;
 	}
 	public List<Qualifier> getQualifiers() {
 		return qualifiers;
@@ -64,6 +58,13 @@ public class TimeSeriesCorrectedData {
 	}
 	public void setUnit(String unit) {
 		this.unit = unit;
+	}
+	public List<TimeSeriesPoint> getPoints() {
+		return points;
+	}
+	public TimeSeriesCorrectedData setPoints(List<TimeSeriesPoint> points) {
+		this.points = points;
+		return this;
 	}
 	
 }
