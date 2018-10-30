@@ -2,6 +2,7 @@ package gov.usgs.aqcu.model;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.temporal.Temporal;
 
 /** 
  * This class is a substitute for com.aquaticinformatics.aquarius.sdk.timeseries.servicemodels.Publish.TimeSeriesPoint
@@ -10,15 +11,15 @@ import java.time.Instant;
  * b) Have values expressed as BigDecimal, rather than imprecise Double approximations.
  */
 public class ExtremesPoint {
-	private Instant time;
+	private Temporal time;
 
 	private BigDecimal value;
 
-	public Instant getTime() {
+	public Temporal getTime() {
 		return time;
 	}
 
-	public ExtremesPoint setTime(Instant time) {
+	public ExtremesPoint setTime(Temporal time) {
 		this.time = time;
 		return this;
 	}

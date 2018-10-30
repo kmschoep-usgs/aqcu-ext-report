@@ -27,6 +27,7 @@ import gov.usgs.aqcu.calc.MinMaxFinder;
 import gov.usgs.aqcu.calc.MinMaxFinder.MinMaxSummary;
 import gov.usgs.aqcu.model.*;
 import gov.usgs.aqcu.retrieval.*;
+import gov.usgs.aqcu.retrieval.ExtTimeSeriesDataService;
 
 @Service
 public class ReportBuilderService {
@@ -40,7 +41,7 @@ public class ReportBuilderService {
 	private LocationDescriptionListService locationDescriptionListService;
 	private MinMaxBuilderService minMaxBuilderService;
 	private TimeSeriesDescriptionListService timeSeriesDescriptionListService;
-	private TimeSeriesDataService timeSeriesDataService;
+	private ExtTimeSeriesDataService extTimeSeriesDataService;
 	private QualifierLookupService qualifierLookupService;
 
 	@Autowired
@@ -48,12 +49,12 @@ public class ReportBuilderService {
 		LocationDescriptionListService locationDescriptionListService,
 		MinMaxBuilderService minMaxBuilderService,
 		TimeSeriesDescriptionListService timeSeriesDescriptionListService,
-		TimeSeriesDataService timeSeriesDataService,
+		ExtTimeSeriesDataService extTimeSeriesDataService,
 		QualifierLookupService qualifierLookupService) {
 		this.locationDescriptionListService = locationDescriptionListService;
 		this.minMaxBuilderService = minMaxBuilderService;
 		this.timeSeriesDescriptionListService = timeSeriesDescriptionListService;
-		this.timeSeriesDataService = timeSeriesDataService;
+		this.extTimeSeriesDataService = extTimeSeriesDataService;
 		this.qualifierLookupService = qualifierLookupService;
 	}
 
@@ -85,14 +86,13 @@ public class ReportBuilderService {
 			// get min/max of derived series
 			MinMaxSummary dvMinMaxSummary = getSummary(dvData);
 			// min/max primary
-			derivedMinMax = minMaxBuilderService.getMinMaxSummary(dvMinMaxSummary, dvData.getName(), null, null);
+			derivedMinMax = minMaxBuilderService.getMinMaxSummary(dvMinMaxSummary, dvData.getName(), null, null, timeSeriesDescriptions);
 			qualifiers.addAll(addQualifiers(derivedMinMax.getQualifiers()));
 			report.setDv(derivedMinMax);
 		}
 				
 		//Time Series Corrected Metadata and Data for Upchain		
 		if (timeSeriesDescriptions.containsKey(requestParameters.getUpchainTimeseriesIdentifier())) {
-			
 			//corrected data
 			upchainData = buildTimeSeriesCorrectedData(timeSeriesDescriptions,
 					requestParameters.getUpchainTimeseriesIdentifier(), requestParameters);
@@ -101,17 +101,17 @@ public class ReportBuilderService {
 			MinMaxSummary primaryMinMaxSummary = getSummary(primaryData, upchainData);
 			
 			// min/max primary, related upchain
-			primaryMinMax = minMaxBuilderService.getMinMaxSummary(primaryMinMaxSummary, primaryData.getName(), upchainData.getName(), UPCHAIN);
+			primaryMinMax = minMaxBuilderService.getMinMaxSummary(primaryMinMaxSummary, primaryData.getName(), upchainData.getName(), UPCHAIN, timeSeriesDescriptions);
 			qualifiers.addAll(addQualifiers(primaryMinMax.getQualifiers()));
 			// min/max upchain, related primary
-			upchainMinMax = minMaxBuilderService.getMinMaxSummary(primaryMinMaxSummary, upchainData.getName(), primaryData.getName(), PRIMARY);
+			upchainMinMax = minMaxBuilderService.getMinMaxSummary(primaryMinMaxSummary, upchainData.getName(), primaryData.getName(), PRIMARY, timeSeriesDescriptions);
 			qualifiers.addAll(addQualifiers(upchainMinMax.getQualifiers()));
 			report.setPrimary(primaryMinMax);
 			report.setUpchain(upchainMinMax);
 		} else {
 			MinMaxSummary primaryMinMaxSummary = getSummary(primaryData);
 			// min/max primary, related upchain
-			primaryMinMax = minMaxBuilderService.getMinMaxSummary(primaryMinMaxSummary, primaryData.getName(), null, null);
+			primaryMinMax = minMaxBuilderService.getMinMaxSummary(primaryMinMaxSummary, primaryData.getName(), null, null, timeSeriesDescriptions);
 			report.setPrimary(primaryMinMax);
 		}
 
@@ -177,7 +177,7 @@ public class ReportBuilderService {
 		if (timeSeriesDescriptions != null && timeSeriesDescriptions.containsKey(timeSeriesIdentifier)) {
 			boolean isDaily = TimeSeriesUtils.isDailyTimeSeries(timeSeriesDescriptions.get(timeSeriesIdentifier));
 			ZoneOffset zoneOffset = TimeSeriesUtils.getZoneOffset(timeSeriesDescriptions.get(timeSeriesIdentifier));
-			TimeSeriesDataServiceResponse timeSeriesDataServiceResponse = timeSeriesDataService
+			TimeSeriesDataServiceResponse timeSeriesDataServiceResponse = extTimeSeriesDataService
 					.get(timeSeriesIdentifier, requestParameters,  zoneOffset, isDaily, false, false, null);
 
 			if (timeSeriesDataServiceResponse != null) {
@@ -212,28 +212,12 @@ public class ReportBuilderService {
 
 		if (timeSeriesDataServiceResponse.getPoints() != null) {
 			timeSeriesCorrectedData
-					.setPoints(createExtremesPoints(timeSeriesDataServiceResponse.getPoints(), isDaily, zoneOffset));
+					.setPoints(timeSeriesDataServiceResponse.getPoints());
 		}
 
 		return timeSeriesCorrectedData;
 	}
 
-	/**
-	 * This method should only be called if the timeSeriesPoints list is not null.
-	 */
-	protected List<ExtremesPoint> createExtremesPoints(List<TimeSeriesPoint> timeSeriesPoints,
-			boolean isDaily, ZoneOffset zoneOffset) {
-		List<ExtremesPoint> extPoints = timeSeriesPoints.parallelStream()
-				.filter(x -> x.getValue().getNumeric() != null)
-				.map(x -> {
-					ExtremesPoint extPoint = new ExtremesPoint();
-					extPoint.setTime(isDaily ? x.getTimestamp().getDateTimeOffset().minus(1, ChronoUnit.DAYS) : x.getTimestamp().getDateTimeOffset());
-					extPoint.setValue(DoubleWithDisplayUtil.getRoundedValue(x.getValue()));
-					return extPoint;
-				})
-				.collect(Collectors.toList());
-		return extPoints;
-	}
 	
 	protected MinMaxSummary getSummary(TimeSeriesCorrectedData... expectedTimeSeries) {
 
