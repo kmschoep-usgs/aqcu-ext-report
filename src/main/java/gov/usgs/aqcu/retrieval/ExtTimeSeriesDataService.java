@@ -44,7 +44,7 @@ public class ExtTimeSeriesDataService {
 		}
 		
 		if(isDaily) {
-			timeSeriesResponse.setPoints(new ArrayList<>(timeSeriesResponse.getPoints().subList(1, timeSeriesResponse.getPoints().size()-1)));
+			timeSeriesResponse.setPoints(new ArrayList<>(timeSeriesResponse.getPoints().subList(1, timeSeriesResponse.getPoints().size())));
 		}
 		return timeSeriesResponse;
 	}
