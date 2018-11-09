@@ -112,6 +112,7 @@ public class ReportBuilderService {
 			MinMaxSummary primaryMinMaxSummary = getSummary(primaryData);
 			// min/max primary, related upchain
 			primaryMinMax = minMaxBuilderService.getMinMaxSummary(primaryMinMaxSummary, primaryData.getName(), null, null, timeSeriesDescriptions);
+			qualifiers.addAll(addQualifiers(primaryMinMax.getQualifiers()));
 			report.setPrimary(primaryMinMax);
 		}
 
