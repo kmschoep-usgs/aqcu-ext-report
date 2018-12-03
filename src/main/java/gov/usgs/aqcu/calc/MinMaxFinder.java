@@ -1,6 +1,5 @@
 package gov.usgs.aqcu.calc;
 
-import gov.usgs.aqcu.model.ExtremesPoint;
 import gov.usgs.aqcu.model.TimeSeriesCorrectedData;
 
 import java.math.BigDecimal;
