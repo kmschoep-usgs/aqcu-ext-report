@@ -1,7 +1,6 @@
 package gov.usgs.aqcu.model;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.time.temporal.Temporal;
 
 /** 

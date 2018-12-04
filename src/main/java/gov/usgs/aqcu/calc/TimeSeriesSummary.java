@@ -1,7 +1,5 @@
 package gov.usgs.aqcu.calc;
 
-import java.time.Instant;
-import java.time.ZoneOffset;
 import java.time.temporal.Temporal;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -15,7 +13,6 @@ import java.util.stream.Collectors;
 import com.aquaticinformatics.aquarius.sdk.timeseries.servicemodels.Publish.Qualifier;
 import com.aquaticinformatics.aquarius.sdk.timeseries.servicemodels.Publish.TimeSeriesPoint;
 
-import gov.usgs.aqcu.model.ExtremesPoint;
 import gov.usgs.aqcu.model.TimeSeriesCorrectedData;
 import gov.usgs.aqcu.util.DoubleWithDisplayUtil;
 

@@ -6,10 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.time.ZoneOffset;
-import java.time.temporal.ChronoUnit;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,17 +13,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.aquaticinformatics.aquarius.sdk.timeseries.servicemodels.Publish.Qualifier;
 import com.aquaticinformatics.aquarius.sdk.timeseries.servicemodels.Publish.TimeSeriesDataServiceResponse;
 import com.aquaticinformatics.aquarius.sdk.timeseries.servicemodels.Publish.TimeSeriesDescription;
-import com.aquaticinformatics.aquarius.sdk.timeseries.servicemodels.Publish.TimeSeriesPoint;
 
 import gov.usgs.aqcu.parameter.ExtremesRequestParameters;
 import gov.usgs.aqcu.util.AqcuTimeUtils;
-import gov.usgs.aqcu.util.DoubleWithDisplayUtil;
 import gov.usgs.aqcu.util.TimeSeriesUtils;
 import gov.usgs.aqcu.calc.MinMaxFinder;
 import gov.usgs.aqcu.calc.MinMaxFinder.MinMaxSummary;
 import gov.usgs.aqcu.model.*;
 import gov.usgs.aqcu.retrieval.*;
-import gov.usgs.aqcu.retrieval.ExtTimeSeriesDataService;
 
 @Service
 public class ReportBuilderService {
@@ -36,12 +29,10 @@ public class ReportBuilderService {
 	public static final String PRIMARY = "Primary";
 	public static final String UPCHAIN = "Upchain";
 
-	private static final Logger LOG = LoggerFactory.getLogger(ReportBuilderService.class);
-
 	private LocationDescriptionListService locationDescriptionListService;
 	private MinMaxBuilderService minMaxBuilderService;
 	private TimeSeriesDescriptionListService timeSeriesDescriptionListService;
-	private ExtTimeSeriesDataService extTimeSeriesDataService;
+	private TimeSeriesDataService timeSeriesDataService;
 	private QualifierLookupService qualifierLookupService;
 
 	@Autowired
@@ -49,12 +40,12 @@ public class ReportBuilderService {
 		LocationDescriptionListService locationDescriptionListService,
 		MinMaxBuilderService minMaxBuilderService,
 		TimeSeriesDescriptionListService timeSeriesDescriptionListService,
-		ExtTimeSeriesDataService extTimeSeriesDataService,
+		TimeSeriesDataService timeSeriesDataService,
 		QualifierLookupService qualifierLookupService) {
 		this.locationDescriptionListService = locationDescriptionListService;
 		this.minMaxBuilderService = minMaxBuilderService;
 		this.timeSeriesDescriptionListService = timeSeriesDescriptionListService;
-		this.extTimeSeriesDataService = extTimeSeriesDataService;
+		this.timeSeriesDataService = timeSeriesDataService;
 		this.qualifierLookupService = qualifierLookupService;
 	}
 
@@ -178,7 +169,7 @@ public class ReportBuilderService {
 		if (timeSeriesDescriptions != null && timeSeriesDescriptions.containsKey(timeSeriesIdentifier)) {
 			boolean isDaily = TimeSeriesUtils.isDailyTimeSeries(timeSeriesDescriptions.get(timeSeriesIdentifier));
 			ZoneOffset zoneOffset = TimeSeriesUtils.getZoneOffset(timeSeriesDescriptions.get(timeSeriesIdentifier));
-			TimeSeriesDataServiceResponse timeSeriesDataServiceResponse = extTimeSeriesDataService
+			TimeSeriesDataServiceResponse timeSeriesDataServiceResponse = timeSeriesDataService
 					.get(timeSeriesIdentifier, requestParameters,  zoneOffset, isDaily, false, false, null);
 
 			if (timeSeriesDataServiceResponse != null) {

@@ -8,7 +8,6 @@ import static gov.usgs.aqcu.calc.OrderingComparators.MAX;
 import static gov.usgs.aqcu.calc.OrderingComparators.MIN;
 
 import java.time.ZoneOffset;
-import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 
 import org.slf4j.Logger;

@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.aquaticinformatics.aquarius.sdk.timeseries.servicemodels.Publish.Qualifier;
-import com.aquaticinformatics.aquarius.sdk.timeseries.servicemodels.Publish.TimeSeriesPoint;
 
 public class ExtremesMinMax {	
 	private Map<String, List<ExtremesPoint>> min;
