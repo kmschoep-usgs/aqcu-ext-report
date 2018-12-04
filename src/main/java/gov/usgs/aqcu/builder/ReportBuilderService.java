@@ -13,12 +13,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.aquaticinformatics.aquarius.sdk.timeseries.servicemodels.Publish.Qualifier;
 import com.aquaticinformatics.aquarius.sdk.timeseries.servicemodels.Publish.TimeSeriesDataServiceResponse;
 import com.aquaticinformatics.aquarius.sdk.timeseries.servicemodels.Publish.TimeSeriesDescription;
+import com.aquaticinformatics.aquarius.sdk.timeseries.servicemodels.Publish.TimeSeriesPoint;
 
 import gov.usgs.aqcu.parameter.ExtremesRequestParameters;
 import gov.usgs.aqcu.util.AqcuTimeUtils;
 import gov.usgs.aqcu.util.TimeSeriesUtils;
-import gov.usgs.aqcu.calc.MinMaxFinder;
-import gov.usgs.aqcu.calc.MinMaxFinder.MinMaxSummary;
 import gov.usgs.aqcu.model.*;
 import gov.usgs.aqcu.retrieval.*;
 
@@ -51,61 +50,92 @@ public class ReportBuilderService {
 
 	public ExtremesReport buildReport(ExtremesRequestParameters requestParameters, String requestingUser) {
 		ExtremesReport report = new ExtremesReport();
+		ExtremesMinMax primaryOutput = new ExtremesMinMax();
+		ExtremesMinMax upchainOutput = new ExtremesMinMax();
+		ExtremesMinMax derviedOutput = new ExtremesMinMax();
 		List<Qualifier> qualifiers = new ArrayList<>();
-		TimeSeriesCorrectedData upchainData = new TimeSeriesCorrectedData();
-		TimeSeriesCorrectedData dvData = new TimeSeriesCorrectedData();
-		ExtremesMinMax primaryMinMax = new ExtremesMinMax();
-		ExtremesMinMax upchainMinMax = new ExtremesMinMax();
-		ExtremesMinMax derivedMinMax = new ExtremesMinMax();
 
 		// All TS Metadata
 		Map<String, TimeSeriesDescription> timeSeriesDescriptions = timeSeriesDescriptionListService.getTimeSeriesDescriptionList(new ArrayList<>(requestParameters.getTsIdSet()))
 			.stream().collect(Collectors.toMap(t -> t.getUniqueId(), t -> t));
 		
-		//Primary TS Metadata
+		// Primary TS Data
 		TimeSeriesDescription primaryDescription = timeSeriesDescriptions.get(requestParameters.getPrimaryTimeseriesIdentifier());
-		
-		//Time Series Corrected Data for Primary
-		TimeSeriesCorrectedData primaryData = buildTimeSeriesCorrectedData(timeSeriesDescriptions,
-				requestParameters.getPrimaryTimeseriesIdentifier(), requestParameters);
-		
-		//Time Series Corrected Metadata and Data for derived
-		if (timeSeriesDescriptions.containsKey(requestParameters.getDerivedTimeseriesIdentifier())) {
-			//corrected data
-			dvData = buildTimeSeriesCorrectedData(timeSeriesDescriptions,
-					requestParameters.getDerivedTimeseriesIdentifier(), requestParameters);
-			// get min/max of derived series
-			MinMaxSummary dvMinMaxSummary = getSummary(dvData);
-			// min/max primary
-			derivedMinMax = minMaxBuilderService.getMinMaxSummary(dvMinMaxSummary, dvData.getName(), null, null, timeSeriesDescriptions);
-			qualifiers.addAll(addQualifiers(derivedMinMax.getQualifiers()));
-			report.setDv(derivedMinMax);
+		ZoneOffset primaryZoneOffset = TimeSeriesUtils.getZoneOffset(primaryDescription);
+		Boolean primaryIsDaily = TimeSeriesUtils.isDailyTimeSeries(primaryDescription);
+		TimeSeriesDataServiceResponse primaryData = timeSeriesDataService
+			.get(primaryDescription.getUniqueId(), requestParameters,  primaryZoneOffset, primaryIsDaily, false, false, null);
+		TimeSeriesMinMax primaryMinMax = null;
+
+		if(primaryData != null && !primaryData.getPoints().isEmpty()) {
+			primaryMinMax = minMaxBuilderService.findMinMaxPoints(primaryData.getPoints());
+			primaryOutput.setMaxPoints(getExtremesPoints(primaryMinMax.getMaxPoints(), primaryIsDaily, primaryZoneOffset));
+			primaryOutput.setMinPoints(getExtremesPoints(primaryMinMax.getMinPoints(), primaryIsDaily, primaryZoneOffset));
+			primaryOutput.setQualifiers(primaryData.getQualifiers());
 		}
-				
-		//Time Series Corrected Metadata and Data for Upchain		
-		if (timeSeriesDescriptions.containsKey(requestParameters.getUpchainTimeseriesIdentifier())) {
-			//corrected data
-			upchainData = buildTimeSeriesCorrectedData(timeSeriesDescriptions,
-					requestParameters.getUpchainTimeseriesIdentifier(), requestParameters);
-			
-			// get min/max of primary series and upchain series
-			MinMaxSummary primaryMinMaxSummary = getSummary(primaryData, upchainData);
-			
-			// min/max primary, related upchain
-			primaryMinMax = minMaxBuilderService.getMinMaxSummary(primaryMinMaxSummary, primaryData.getName(), upchainData.getName(), UPCHAIN, timeSeriesDescriptions);
-			qualifiers.addAll(addQualifiers(primaryMinMax.getQualifiers()));
-			// min/max upchain, related primary
-			upchainMinMax = minMaxBuilderService.getMinMaxSummary(primaryMinMaxSummary, upchainData.getName(), primaryData.getName(), PRIMARY, timeSeriesDescriptions);
-			qualifiers.addAll(addQualifiers(upchainMinMax.getQualifiers()));
-			report.setPrimary(primaryMinMax);
-			report.setUpchain(upchainMinMax);
-		} else {
-			MinMaxSummary primaryMinMaxSummary = getSummary(primaryData);
-			// min/max primary, related upchain
-			primaryMinMax = minMaxBuilderService.getMinMaxSummary(primaryMinMaxSummary, primaryData.getName(), null, null, timeSeriesDescriptions);
-			qualifiers.addAll(addQualifiers(primaryMinMax.getQualifiers()));
-			report.setPrimary(primaryMinMax);
+
+		// Upchain TS Data
+		TimeSeriesDescription upchainDescription = timeSeriesDescriptions.get(requestParameters.getUpchainTimeseriesIdentifier());
+		TimeSeriesDataServiceResponse upchainData = null;
+
+		if(upchainDescription != null) {
+			ZoneOffset upchainZoneOffset = TimeSeriesUtils.getZoneOffset(upchainDescription);
+			Boolean upchainIsDaily = TimeSeriesUtils.isDailyTimeSeries(upchainDescription);
+			upchainData = timeSeriesDataService
+				.get(upchainDescription.getUniqueId(), requestParameters,  upchainZoneOffset, upchainIsDaily, false, false, null);
+
+			if(upchainData != null && !upchainData.getPoints().isEmpty()) {
+				TimeSeriesMinMax upchainMinMax = minMaxBuilderService.findMinMaxPoints(upchainData.getPoints());
+				upchainOutput.setMaxPoints(getExtremesPoints(upchainMinMax.getMaxPoints(), upchainIsDaily, upchainZoneOffset));
+				upchainOutput.setMinPoints(getExtremesPoints(upchainMinMax.getMinPoints(), upchainIsDaily, upchainZoneOffset));
+				upchainOutput.setQualifiers(upchainData.getQualifiers());
+
+				// Find related data
+				if(primaryMinMax != null && upchainMinMax != null) {
+					TimeSeriesMinMax relatedUpchainMinMax = minMaxBuilderService.findMinMaxMatchingPoints(primaryMinMax, upchainData.getPoints());
+					TimeSeriesMinMax relatedPrimaryMinMax = minMaxBuilderService.findMinMaxMatchingPoints(upchainMinMax, primaryData.getPoints());
+
+					primaryOutput.setMaxRelatedPoints(
+						getExtremesPoints(relatedUpchainMinMax.getMaxPoints(), upchainIsDaily, upchainZoneOffset),
+						"relatedUpcain"
+					);
+					primaryOutput.setMinRelatedPoints(
+						getExtremesPoints(relatedUpchainMinMax.getMinPoints(), upchainIsDaily, upchainZoneOffset),
+						"relatedUpcain"
+					);
+					upchainOutput.setMaxRelatedPoints(
+						getExtremesPoints(relatedPrimaryMinMax.getMaxPoints(), primaryIsDaily, primaryZoneOffset),
+						"relatedPrimary"
+					);
+					upchainOutput.setMinRelatedPoints(
+						getExtremesPoints(relatedPrimaryMinMax.getMinPoints(), primaryIsDaily, primaryZoneOffset),
+						"relatedPrimary"
+					);
+				}
+			}
 		}
+		
+		// Dervied TS Data
+		TimeSeriesDescription derviedDescription = timeSeriesDescriptions.get(requestParameters.getDerivedTimeseriesIdentifier());
+		TimeSeriesDataServiceResponse derivedData = null;
+
+		if(derviedDescription != null) {
+			ZoneOffset derviedZoneOffset = TimeSeriesUtils.getZoneOffset(derviedDescription);
+			derivedData = timeSeriesDataService
+				.get(derviedDescription.getUniqueId(), requestParameters,  derviedZoneOffset, true, false, false, null);
+
+			if(derivedData != null && !derivedData.getPoints().isEmpty()) {
+				TimeSeriesMinMax derivedMinMax = minMaxBuilderService.findMinMaxPoints(derivedData.getPoints());
+				derviedOutput.setMaxPoints(getExtremesPoints(derivedMinMax.getMaxPoints(), true, derviedZoneOffset));
+				derviedOutput.setMinPoints(getExtremesPoints(derivedMinMax.getMinPoints(), true, derviedZoneOffset));
+				derviedOutput.setQualifiers(derivedData.getQualifiers());
+			}
+		}
+
+		// Output to report
+		report.setPrimary(primaryOutput);
+		report.setUpchain(upchainOutput);
+		report.setDv(derviedOutput);
 
 		//Report Metadata
 		report.setReportMetadata(getReportMetadata(requestParameters,
@@ -116,6 +146,13 @@ public class ReportBuilderService {
 		));
 
 		return report;
+	}
+
+	protected List<ExtremesPoint> getExtremesPoints(List<TimeSeriesPoint> points, Boolean isDaily, ZoneOffset zoneOffset) {
+		if(points != null && !points.isEmpty()) {
+			return points.stream().map(p -> new ExtremesPoint(p, isDaily, zoneOffset)).collect(Collectors.toList());
+		}
+		return new ArrayList<>();
 	}
 
 	protected ExtremesReportMetadata getReportMetadata(ExtremesRequestParameters requestParameters, 
@@ -159,67 +196,6 @@ public class ReportBuilderService {
 		}
 		
 		return metadata;
-	}
-	
-	protected TimeSeriesCorrectedData buildTimeSeriesCorrectedData(
-			Map<String, TimeSeriesDescription> timeSeriesDescriptions, String timeSeriesIdentifier,
-			ExtremesRequestParameters requestParameters) {
-		TimeSeriesCorrectedData timeSeriesCorrectedData = null;
-
-		if (timeSeriesDescriptions != null && timeSeriesDescriptions.containsKey(timeSeriesIdentifier)) {
-			boolean isDaily = TimeSeriesUtils.isDailyTimeSeries(timeSeriesDescriptions.get(timeSeriesIdentifier));
-			ZoneOffset zoneOffset = TimeSeriesUtils.getZoneOffset(timeSeriesDescriptions.get(timeSeriesIdentifier));
-			TimeSeriesDataServiceResponse timeSeriesDataServiceResponse = timeSeriesDataService
-					.get(timeSeriesIdentifier, requestParameters,  zoneOffset, isDaily, false, false, null);
-
-			if (timeSeriesDataServiceResponse != null) {
-				timeSeriesCorrectedData = createTimeSeriesCorrectedData(timeSeriesDataServiceResponse, isDaily,
-				zoneOffset);
-			}
-		}
-
-		return timeSeriesCorrectedData;
-	}
-
-	
-	/**
-	 * This method should only be called if the timeSeriesDataServiceResponse is not null.
-	 */
-	protected TimeSeriesCorrectedData createTimeSeriesCorrectedData(
-			TimeSeriesDataServiceResponse timeSeriesDataServiceResponse, boolean isDaily, ZoneOffset zoneOffset) {
-		TimeSeriesCorrectedData timeSeriesCorrectedData = new TimeSeriesCorrectedData();
-
-		if (timeSeriesDataServiceResponse.getTimeRange() != null) {
-			timeSeriesCorrectedData.setStartTime(AqcuTimeUtils
-					.getTemporal(timeSeriesDataServiceResponse.getTimeRange().getStartTime(), isDaily, zoneOffset));
-			timeSeriesCorrectedData.setEndTime(AqcuTimeUtils
-					.getTemporal(timeSeriesDataServiceResponse.getTimeRange().getEndTime(), isDaily, zoneOffset));
-		}
-
-		timeSeriesCorrectedData.setUnit(timeSeriesDataServiceResponse.getUnit());
-		timeSeriesCorrectedData.setType(timeSeriesDataServiceResponse.getParameter());
-		timeSeriesCorrectedData.setName(timeSeriesDataServiceResponse.getUniqueId());
-		timeSeriesCorrectedData.setQualifiers(timeSeriesDataServiceResponse.getQualifiers());
-		
-
-		if (timeSeriesDataServiceResponse.getPoints() != null) {
-			timeSeriesCorrectedData
-					.setPoints(timeSeriesDataServiceResponse.getPoints());
-		}
-
-		return timeSeriesCorrectedData;
-	}
-
-	
-	protected MinMaxSummary getSummary(TimeSeriesCorrectedData... expectedTimeSeries) {
-
-		HashMap<String, TimeSeriesCorrectedData> inTimeSeries = new HashMap<>();
-		for(TimeSeriesCorrectedData ts : expectedTimeSeries) {
-			inTimeSeries.put(ts.getName(), ts);
-		}
-		MinMaxSummary summary = new MinMaxFinder(inTimeSeries).getCalculatedSummary();
-		
-		return summary;
 	}
 	
 	protected List<Qualifier> addQualifiers(List<Qualifier> inQuals){
