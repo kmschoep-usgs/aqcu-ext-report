@@ -59,7 +59,7 @@ public class MinMaxBuilderService {
     public TimeSeriesMinMax findMinMaxMatchingPoints(TimeSeriesMinMax primaryMinMax, List<TimeSeriesPoint> relatedPoints) {
         TimeSeriesMinMax result = new TimeSeriesMinMax();
 
-        if(relatedPoints != null && !relatedPoints.isEmpty()) {
+        if(primaryMinMax != null) {
             result.setMaxPoints(findMatchingPoints(primaryMinMax.getMaxPoints(), relatedPoints));
             result.setMinPoints(findMatchingPoints(primaryMinMax.getMinPoints(), relatedPoints));
         }
@@ -70,7 +70,7 @@ public class MinMaxBuilderService {
     protected List<TimeSeriesPoint> findMatchingPoints(List<TimeSeriesPoint> primaryPoints, List<TimeSeriesPoint> relatedPoints) {
         List<TimeSeriesPoint> matchingPoints = new ArrayList<>();
 
-        if(primaryPoints != null && !primaryPoints.isEmpty()) {
+        if(primaryPoints != null && !primaryPoints.isEmpty() && relatedPoints != null && !relatedPoints.isEmpty()) {
             Map<Instant, TimeSeriesPoint> relatedPointMap = pointListToMap(relatedPoints);
 
             for(TimeSeriesPoint primaryPoint : primaryPoints) {

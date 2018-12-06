@@ -24,8 +24,8 @@ import gov.usgs.aqcu.retrieval.*;
 public class ReportBuilderService {
 	public static final String REPORT_TITLE = "Extremes";
 	public static final String REPORT_TYPE = "extremes";
-	public static final String PRIMARY = "Primary";
-	public static final String UPCHAIN = "Upchain";
+	public static final String PRIMARY_RELATED_KEY = "relatedPrimary";
+	public static final String UPCHAIN_RELATED_KEY = "relatedUpchain";
 
 	private LocationDescriptionListService locationDescriptionListService;
 	private MinMaxBuilderService minMaxBuilderService;
@@ -55,8 +55,9 @@ public class ReportBuilderService {
 		List<Qualifier> qualifiers = new ArrayList<>();
 
 		// All TS Metadata
-		Map<String, TimeSeriesDescription> timeSeriesDescriptions = timeSeriesDescriptionListService.getTimeSeriesDescriptionList(new ArrayList<>(requestParameters.getTsIdSet()))
-			.stream().collect(Collectors.toMap(t -> t.getUniqueId(), t -> t));
+		Map<String, TimeSeriesDescription> timeSeriesDescriptions = 
+			timeSeriesDescriptionListService.getTimeSeriesDescriptionList(new ArrayList<>(requestParameters.getTsIdSet()))
+				.stream().collect(Collectors.toMap(t -> t.getUniqueId(), t -> t));
 		
 		// Primary TS Data
 		TimeSeriesDescription primaryDescription = timeSeriesDescriptions.get(requestParameters.getPrimaryTimeseriesIdentifier());
@@ -71,6 +72,7 @@ public class ReportBuilderService {
 			primaryOutput.setMaxPoints(getExtremesPoints(primaryMinMax.getMaxPoints(), primaryIsDaily, primaryZoneOffset));
 			primaryOutput.setMinPoints(getExtremesPoints(primaryMinMax.getMinPoints(), primaryIsDaily, primaryZoneOffset));
 			primaryOutput.setQualifiers(primaryData.getQualifiers());
+			qualifiers.addAll(primaryData.getQualifiers());
 		}
 
 		// Upchain TS Data
@@ -88,6 +90,7 @@ public class ReportBuilderService {
 				upchainOutput.setMaxPoints(getExtremesPoints(upchainMinMax.getMaxPoints(), upchainIsDaily, upchainZoneOffset));
 				upchainOutput.setMinPoints(getExtremesPoints(upchainMinMax.getMinPoints(), upchainIsDaily, upchainZoneOffset));
 				upchainOutput.setQualifiers(upchainData.getQualifiers());
+				qualifiers.addAll(upchainData.getQualifiers());
 
 				// Find related data
 				if(primaryMinMax != null && upchainMinMax != null) {
@@ -96,19 +99,19 @@ public class ReportBuilderService {
 
 					primaryOutput.setMaxRelatedPoints(
 						getExtremesPoints(relatedUpchainMinMax.getMaxPoints(), upchainIsDaily, upchainZoneOffset),
-						"relatedUpcain"
+						UPCHAIN_RELATED_KEY
 					);
 					primaryOutput.setMinRelatedPoints(
 						getExtremesPoints(relatedUpchainMinMax.getMinPoints(), upchainIsDaily, upchainZoneOffset),
-						"relatedUpcain"
+						UPCHAIN_RELATED_KEY
 					);
 					upchainOutput.setMaxRelatedPoints(
 						getExtremesPoints(relatedPrimaryMinMax.getMaxPoints(), primaryIsDaily, primaryZoneOffset),
-						"relatedPrimary"
+						PRIMARY_RELATED_KEY
 					);
 					upchainOutput.setMinRelatedPoints(
 						getExtremesPoints(relatedPrimaryMinMax.getMinPoints(), primaryIsDaily, primaryZoneOffset),
-						"relatedPrimary"
+						PRIMARY_RELATED_KEY
 					);
 				}
 			}
@@ -128,6 +131,7 @@ public class ReportBuilderService {
 				derviedOutput.setMaxPoints(getExtremesPoints(derivedMinMax.getMaxPoints(), true, derviedZoneOffset));
 				derviedOutput.setMinPoints(getExtremesPoints(derivedMinMax.getMinPoints(), true, derviedZoneOffset));
 				derviedOutput.setQualifiers(derivedData.getQualifiers());
+				qualifiers.addAll(derivedData.getQualifiers());
 			}
 		}
 
@@ -196,14 +200,4 @@ public class ReportBuilderService {
 		
 		return metadata;
 	}
-	
-	protected List<Qualifier> addQualifiers(List<Qualifier> inQuals){
-		List<Qualifier> outQuals = new ArrayList<>();
-		if (inQuals != null) {
-			outQuals.addAll(inQuals);
-		} 
-		
-		return outQuals;
-	}
-
 }
