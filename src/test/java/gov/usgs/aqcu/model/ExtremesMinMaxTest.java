@@ -1,6 +1,7 @@
 package gov.usgs.aqcu.model;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -51,4 +52,57 @@ public class ExtremesMinMaxTest {
 		assertEquals(extremesDailyValues.getMax().get("points").size(), 2);
 	}
 
+	@Test
+	public void setMinPointsTest() {
+		ExtremesMinMax test = new ExtremesMinMax();
+		test.setMinPoints(minPoints.get("points"));
+		assertEquals(test.getMin().get("points").size(), 2);
+		test = new ExtremesMinMax();
+		test.setMinPoints(new ArrayList<>());
+		assertNull(test.getMin());
+		test = new ExtremesMinMax();
+		test.setMinPoints(null);
+		assertNull(test.getMin());
+	}
+
+	@Test
+	public void setMaxPointsTest() {
+		ExtremesMinMax test = new ExtremesMinMax();
+		test.setMaxPoints(maxPoints.get("points"));
+		assertEquals(test.getMax().get("points").size(), 2);
+		test = new ExtremesMinMax();
+		test.setMaxPoints(new ArrayList<>());
+		assertNull(test.getMax());
+		test = new ExtremesMinMax();
+		test.setMaxPoints(null);
+		assertNull(test.getMax());
+	}
+
+	@Test
+	public void setMinRelatedPointsTest() {
+		ExtremesMinMax test = new ExtremesMinMax();
+		test.setMinRelatedPoints(minPoints.get("points"), "related");
+		assertNull(test.getMin().get("points"));
+		assertEquals(test.getMin().get("related").size(), 2);
+		test = new ExtremesMinMax();
+		test.setMinRelatedPoints(new ArrayList<>(), "related");
+		assertNull(test.getMin());
+		test = new ExtremesMinMax();
+		test.setMinRelatedPoints(null, "related");
+		assertNull(test.getMin());
+	}
+
+	@Test
+	public void setMaxRelatedPointsTest() {
+		ExtremesMinMax test = new ExtremesMinMax();
+		test.setMaxRelatedPoints(minPoints.get("points"), "related");
+		assertNull(test.getMax().get("points"));
+		assertEquals(test.getMax().get("related").size(), 2);
+		test = new ExtremesMinMax();
+		test.setMaxRelatedPoints(new ArrayList<>(), "related");
+		assertNull(test.getMax());
+		test = new ExtremesMinMax();
+		test.setMaxRelatedPoints(null, "related");
+		assertNull(test.getMax());
+	}
 }

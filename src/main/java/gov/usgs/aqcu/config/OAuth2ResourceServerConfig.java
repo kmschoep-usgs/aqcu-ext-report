@@ -35,5 +35,4 @@ public class OAuth2ResourceServerConfig extends ResourceServerConfigurerAdapter 
 	public void configure(ResourceServerSecurityConfigurer resources) {
 		resources.resourceId(resourceId);
 	}
-
 }
