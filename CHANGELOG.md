@@ -6,6 +6,24 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 ### Added
-- Initial release - happy path.
 
-[Unreleased]: https://github.com/USGS-CIDA/aqcu-ext-report/compare/master...master
+### Changed
+- AQ Qualifiers remapped to Extremes report-specific Qualifier model
+- Qualifiers for daily value timeseries have time removed from date
+
+## [0.0.1] - 2019-03-01
+### Added
+- Initial release - happy path
+- Specific timeout values
+- Default Aquarius timeout value of 30000
+
+### Changed
+- Simplified extremes logic
+- Use streams() instead of loops, where possible
+- Aquarius SDK verson 18.8.1
+- AQCU Framework version 0.0.5
+
+### Removed
+- Disabled TLS 1.0/1.1 by default.
+
+[Unreleased]: https://github.com/USGS-CIDA/aqcu-ext-report/compare/aqcu-ext-report-0.0.1...master

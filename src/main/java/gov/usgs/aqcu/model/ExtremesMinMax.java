@@ -4,14 +4,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.aquaticinformatics.aquarius.sdk.timeseries.servicemodels.Publish.Qualifier;
-
 public class ExtremesMinMax {
 	public static final String MIN_MAX_POINTS_KEY = "points";
 
 	private Map<String, List<ExtremesPoint>> min;
 	private Map<String, List<ExtremesPoint>> max;
-	private List<Qualifier> qualifiers;
+	private List<ExtremesQualifier> qualifiers;
 	
 	public Map<String, List<ExtremesPoint>> getMin() {
 		return min;
@@ -29,11 +27,11 @@ public class ExtremesMinMax {
 		this.max = val;
 	}
 	
-	public List<Qualifier> getQualifiers() {
+	public List<ExtremesQualifier> getQualifiers() {
 		return qualifiers;
 	}
 	
-	public void setQualifiers(List<Qualifier> val) {
+	public void setQualifiers(List<ExtremesQualifier> val) {
 		this.qualifiers = val;
 	}
 
