@@ -158,20 +158,12 @@ public class ReportBuilderServiceTest {
 				.setNumeric(1.0D)
 			)
 	));
-	private ArrayList<Qualifier> quals1 = new ArrayList<>(Arrays.asList(
-		new Qualifier()
-			.setIdentifier("qual1"),
-		new Qualifier()
-			.setIdentifier("qual2")
-	));
-	private ArrayList<Qualifier> quals2 = new ArrayList<>(Arrays.asList(
-		new Qualifier()
-			.setIdentifier("qual1")
-	));
-	private ArrayList<Qualifier> quals3 = new ArrayList<>(Arrays.asList(
-		new Qualifier()
-			.setIdentifier("qual3")
-	));
+	private Qualifier qual1 = new Qualifier().setIdentifier("qual1");
+	private Qualifier qual2 = new Qualifier().setIdentifier("qual2");
+	private Qualifier qual3 = new Qualifier().setIdentifier("qual3");
+	private ArrayList<Qualifier> quals1 = new ArrayList<>();
+	private ArrayList<Qualifier> quals2 = new ArrayList<>();
+	private ArrayList<Qualifier> quals3 = new ArrayList<>();
 	private HashMap<String, QualifierMetadata> qualMetadata;
 
 	@Before
@@ -182,6 +174,12 @@ public class ReportBuilderServiceTest {
 		requestParameters.setStartDate(LocalDate.parse("2018-01-01"));
 		requestParameters.setEndDate(LocalDate.parse("2018-02-01"));
 		requestParameters.setPrimaryTimeseriesIdentifier("primaryTsId");
+		qual1.setEndTime(Instant.parse("2018-01-03T00:00:00Z"));
+		qual2.setEndTime(Instant.parse("2018-02-04T00:00:00Z"));
+		qual3.setEndTime(Instant.parse("2018-03-05T00:00:00Z"));
+		quals1.addAll(Arrays.asList(qual1,qual2));
+		quals2.addAll(Arrays.asList(qual1));
+		quals3.addAll(Arrays.asList(qual3));
 		qualMetadata = new HashMap<>();
 		qualMetadata.put("qual1", new QualifierMetadata().setIdentifier("qual1"));
 		qualMetadata.put("qual2", new QualifierMetadata().setIdentifier("qual2"));
@@ -235,6 +233,8 @@ public class ReportBuilderServiceTest {
 		assertEquals(result.getPrimary().getMax().get(ReportBuilderService.UPCHAIN_RELATED_KEY).get(0).getValue(), BigDecimal.valueOf(1.0D));
 		assertEquals(result.getPrimary().getMax().get(ReportBuilderService.UPCHAIN_RELATED_KEY).get(1).getValue(), BigDecimal.valueOf(3.0D));
 		assertNull(result.getPrimary().getMin().get(ReportBuilderService.UPCHAIN_RELATED_KEY));
+		assertEquals(Instant.parse("2018-01-03T00:00:00Z"), result.getPrimary().getQualifiers().get(0).getEndTime());
+		assertEquals(Instant.parse("2018-02-04T00:00:00Z"), result.getPrimary().getQualifiers().get(1).getEndTime());
 
 		// Verify Upchain Data
 		assertEquals(result.getUpchain().getMax().keySet().size(), 2);
@@ -247,6 +247,7 @@ public class ReportBuilderServiceTest {
 		assertEquals(result.getUpchain().getMax().get(ReportBuilderService.PRIMARY_RELATED_KEY).get(0).getValue(), BigDecimal.valueOf(2.0D));
 		assertEquals(result.getUpchain().getMin().get(ReportBuilderService.PRIMARY_RELATED_KEY).size(), 1);
 		assertEquals(result.getUpchain().getMin().get(ReportBuilderService.PRIMARY_RELATED_KEY).get(0).getValue(), BigDecimal.valueOf(1.0D));
+		assertEquals(Instant.parse("2018-01-03T00:00:00Z"), result.getUpchain().getQualifiers().get(0).getEndTime());
 
 		// Verify Derived Data
 		assertEquals(result.getDv().getMax().keySet().size(), 1);
@@ -257,6 +258,7 @@ public class ReportBuilderServiceTest {
 		assertEquals(result.getDv().getMin().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).size(), 1);
 		assertEquals(result.getDv().getMin().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).get(0).getValue(), BigDecimal.valueOf(1.0D));
 		assertEquals(result.getDv().getMin().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).get(0).getTime(), LocalDate.parse("2018-01-01"));
+		assertEquals(LocalDate.parse("2018-03-05"), result.getDv().getQualifiers().get(0).getEndTime());
 
 		// Verify Metadata
 		assertEquals(result.getReportMetadata().getTitle(), ReportBuilderService.REPORT_TITLE);

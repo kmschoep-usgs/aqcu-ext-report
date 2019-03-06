@@ -71,7 +71,7 @@ public class ReportBuilderService {
 			primaryMinMax = minMaxBuilderService.findMinMaxPoints(primaryData.getPoints());
 			primaryOutput.setMaxPoints(getExtremesPoints(primaryMinMax.getMaxPoints(), primaryIsDaily, primaryZoneOffset));
 			primaryOutput.setMinPoints(getExtremesPoints(primaryMinMax.getMinPoints(), primaryIsDaily, primaryZoneOffset));
-			primaryOutput.setQualifiers(primaryData.getQualifiers());
+			primaryOutput.setQualifiers(getExtremesQualifiers(primaryData.getQualifiers(), primaryIsDaily, primaryZoneOffset));
 			qualifiers.addAll(primaryData.getQualifiers());
 		}
 
@@ -89,7 +89,7 @@ public class ReportBuilderService {
 				TimeSeriesMinMax upchainMinMax = minMaxBuilderService.findMinMaxPoints(upchainData.getPoints());
 				upchainOutput.setMaxPoints(getExtremesPoints(upchainMinMax.getMaxPoints(), upchainIsDaily, upchainZoneOffset));
 				upchainOutput.setMinPoints(getExtremesPoints(upchainMinMax.getMinPoints(), upchainIsDaily, upchainZoneOffset));
-				upchainOutput.setQualifiers(upchainData.getQualifiers());
+				upchainOutput.setQualifiers(getExtremesQualifiers(upchainData.getQualifiers(), upchainIsDaily, upchainZoneOffset));
 				qualifiers.addAll(upchainData.getQualifiers());
 
 				// Find related data
@@ -130,7 +130,7 @@ public class ReportBuilderService {
 				TimeSeriesMinMax derivedMinMax = minMaxBuilderService.findMinMaxPoints(derivedData.getPoints());
 				derviedOutput.setMaxPoints(getExtremesPoints(derivedMinMax.getMaxPoints(), true, derviedZoneOffset));
 				derviedOutput.setMinPoints(getExtremesPoints(derivedMinMax.getMinPoints(), true, derviedZoneOffset));
-				derviedOutput.setQualifiers(derivedData.getQualifiers());
+				derviedOutput.setQualifiers(getExtremesQualifiers(derivedData.getQualifiers(), true, derviedZoneOffset));
 				qualifiers.addAll(derivedData.getQualifiers());
 			}
 		}
@@ -154,6 +154,13 @@ public class ReportBuilderService {
 	protected List<ExtremesPoint> getExtremesPoints(List<TimeSeriesPoint> points, Boolean isDaily, ZoneOffset zoneOffset) {
 		if(points != null && !points.isEmpty()) {
 			return points.stream().map(p -> new ExtremesPoint(p, isDaily, zoneOffset)).collect(Collectors.toList());
+		}
+		return new ArrayList<>();
+	}
+	
+	protected List<ExtremesQualifier> getExtremesQualifiers(List<Qualifier> quals, Boolean isDaily, ZoneOffset zoneOffset) {
+		if(quals != null && !quals.isEmpty()) {
+			return quals.stream().map(q -> new ExtremesQualifier(q, isDaily, zoneOffset)).collect(Collectors.toList());
 		}
 		return new ArrayList<>();
 	}
@@ -200,4 +207,5 @@ public class ReportBuilderService {
 		
 		return metadata;
 	}
+
 }
