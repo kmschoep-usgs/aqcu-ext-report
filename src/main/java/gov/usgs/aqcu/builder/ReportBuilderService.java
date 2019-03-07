@@ -1,27 +1,38 @@
 package gov.usgs.aqcu.builder;
 
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.time.ZoneOffset;
 
-import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import com.aquaticinformatics.aquarius.sdk.timeseries.servicemodels.Publish.Qualifier;
 import com.aquaticinformatics.aquarius.sdk.timeseries.servicemodels.Publish.TimeSeriesDataServiceResponse;
 import com.aquaticinformatics.aquarius.sdk.timeseries.servicemodels.Publish.TimeSeriesDescription;
 import com.aquaticinformatics.aquarius.sdk.timeseries.servicemodels.Publish.TimeSeriesPoint;
 
+import gov.usgs.aqcu.model.ExtremesMinMax;
+import gov.usgs.aqcu.model.ExtremesPoint;
+import gov.usgs.aqcu.model.ExtremesQualifier;
+import gov.usgs.aqcu.model.ExtremesReport;
+import gov.usgs.aqcu.model.ExtremesReportMetadata;
+import gov.usgs.aqcu.model.TimeSeriesMinMax;
 import gov.usgs.aqcu.parameter.ExtremesRequestParameters;
+import gov.usgs.aqcu.retrieval.LocationDescriptionListService;
+import gov.usgs.aqcu.retrieval.QualifierLookupService;
+import gov.usgs.aqcu.retrieval.TimeSeriesDataService;
+import gov.usgs.aqcu.retrieval.TimeSeriesDescriptionListService;
 import gov.usgs.aqcu.util.AqcuTimeUtils;
+import gov.usgs.aqcu.util.LogReportExecutionTime;
+import gov.usgs.aqcu.util.LogStep;
 import gov.usgs.aqcu.util.TimeSeriesUtils;
-import gov.usgs.aqcu.model.*;
-import gov.usgs.aqcu.retrieval.*;
 
 @Service
 public class ReportBuilderService {
+	
 	public static final String REPORT_TITLE = "Extremes";
 	public static final String REPORT_TYPE = "extremes";
 	public static final String PRIMARY_RELATED_KEY = "relatedPrimary";
@@ -46,25 +57,29 @@ public class ReportBuilderService {
 		this.timeSeriesDataService = timeSeriesDataService;
 		this.qualifierLookupService = qualifierLookupService;
 	}
-
+	
+	@LogReportExecutionTime
 	public ExtremesReport buildReport(ExtremesRequestParameters requestParameters, String requestingUser) {
 		ExtremesReport report = new ExtremesReport();
 		ExtremesMinMax primaryOutput = new ExtremesMinMax();
 		ExtremesMinMax upchainOutput = new ExtremesMinMax();
 		ExtremesMinMax derviedOutput = new ExtremesMinMax();
 		List<Qualifier> qualifiers = new ArrayList<>();
-
+		
+		
 		// All TS Metadata
 		Map<String, TimeSeriesDescription> timeSeriesDescriptions = 
-			timeSeriesDescriptionListService.getTimeSeriesDescriptionList(new ArrayList<>(requestParameters.getTsIdSet()))
-				.stream().collect(Collectors.toMap(t -> t.getUniqueId(), t -> t));
+				timeSeriesDescriptionListService.getTimeSeriesDescriptionList(new ArrayList<>(requestParameters.getTsIdSet()))
+					.stream().collect(Collectors.toMap(t -> t.getUniqueId(), t -> t));
 		
 		// Primary TS Data
 		TimeSeriesDescription primaryDescription = timeSeriesDescriptions.get(requestParameters.getPrimaryTimeseriesIdentifier());
 		ZoneOffset primaryZoneOffset = TimeSeriesUtils.getZoneOffset(primaryDescription);
 		Boolean primaryIsDaily = TimeSeriesUtils.isDailyTimeSeries(primaryDescription);
+		
 		TimeSeriesDataServiceResponse primaryData = timeSeriesDataService
-			.get(primaryDescription.getUniqueId(), requestParameters,  primaryZoneOffset, primaryIsDaily, false, false, null);
+				.get(primaryDescription.getUniqueId(), requestParameters,  primaryZoneOffset, primaryIsDaily, false, false, null);
+		
 		TimeSeriesMinMax primaryMinMax = null;
 
 		if(primaryData != null && !primaryData.getPoints().isEmpty()) {
@@ -84,7 +99,6 @@ public class ReportBuilderService {
 			Boolean upchainIsDaily = TimeSeriesUtils.isDailyTimeSeries(upchainDescription);
 			upchainData = timeSeriesDataService
 				.get(upchainDescription.getUniqueId(), requestParameters,  upchainZoneOffset, upchainIsDaily, false, false, null);
-
 			if(upchainData != null && !upchainData.getPoints().isEmpty()) {
 				TimeSeriesMinMax upchainMinMax = minMaxBuilderService.findMinMaxPoints(upchainData.getPoints());
 				upchainOutput.setMaxPoints(getExtremesPoints(upchainMinMax.getMaxPoints(), upchainIsDaily, upchainZoneOffset));
@@ -151,6 +165,7 @@ public class ReportBuilderService {
 		return report;
 	}
 
+	@LogStep
 	protected List<ExtremesPoint> getExtremesPoints(List<TimeSeriesPoint> points, Boolean isDaily, ZoneOffset zoneOffset) {
 		if(points != null && !points.isEmpty()) {
 			return points.stream().map(p -> new ExtremesPoint(p, isDaily, zoneOffset)).collect(Collectors.toList());
@@ -158,13 +173,15 @@ public class ReportBuilderService {
 		return new ArrayList<>();
 	}
 	
+	@LogStep
 	protected List<ExtremesQualifier> getExtremesQualifiers(List<Qualifier> quals, Boolean isDaily, ZoneOffset zoneOffset) {
 		if(quals != null && !quals.isEmpty()) {
 			return quals.stream().map(q -> new ExtremesQualifier(q, isDaily, zoneOffset)).collect(Collectors.toList());
 		}
 		return new ArrayList<>();
 	}
-
+	
+	@LogStep
 	protected ExtremesReportMetadata getReportMetadata(ExtremesRequestParameters requestParameters, 
 			Map<String, TimeSeriesDescription> timeSeriesDescriptions,
 			TimeSeriesDescription primarySeriesDescription,
