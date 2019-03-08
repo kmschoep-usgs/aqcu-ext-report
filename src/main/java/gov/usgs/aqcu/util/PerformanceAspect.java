@@ -10,8 +10,8 @@ import org.slf4j.LoggerFactory;
 
 @Aspect
 @Component
-public class LoggingAspect {
-	private Logger log = LoggerFactory.getLogger("aqcu-ext-report logging");
+public class PerformanceAspect {
+	private Logger log = LoggerFactory.getLogger("aqcu-ext-report.logging");
     
 	@Around("@annotation(LogReportExecutionTime)")
     public Object logReportExecutionTime(ProceedingJoinPoint joinPoint) throws Throwable {
@@ -23,16 +23,6 @@ public class LoggingAspect {
         final long executionTime = System.currentTimeMillis() - start;
 
         log.info(joinPoint.getThis() + " executed in " + executionTime + "ms");
-
-        return proceed;
-    }
-	
-	@Around("@annotation(LogStep)")
-    public Object logSteps(ProceedingJoinPoint joinPoint) throws Throwable {
-
-        final Object proceed = joinPoint.proceed();
-
-        log.info("Executed Step: " + joinPoint.getSignature());
 
         return proceed;
     }

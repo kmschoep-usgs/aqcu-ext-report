@@ -17,13 +17,11 @@ import org.springframework.stereotype.Service;
 
 import gov.usgs.aqcu.model.TimeSeriesMinMax;
 import gov.usgs.aqcu.util.DoubleWithDisplayUtil;
-import gov.usgs.aqcu.util.LogStep;
 
 @Service
 public class MinMaxBuilderService {
 	private Logger log = LoggerFactory.getLogger(MinMaxBuilderService.class);
 	
-	@LogStep
 	public TimeSeriesMinMax findMinMaxPoints(List<TimeSeriesPoint> points) {
         TimeSeriesMinMax result = new TimeSeriesMinMax();
 
@@ -66,7 +64,6 @@ public class MinMaxBuilderService {
         
     }
 	
-	@LogStep
     public TimeSeriesMinMax findMinMaxMatchingPoints(TimeSeriesMinMax primaryMinMax, List<TimeSeriesPoint> relatedPoints) {
         TimeSeriesMinMax result = new TimeSeriesMinMax();
 
@@ -78,7 +75,6 @@ public class MinMaxBuilderService {
         return result;
     }
 	
-	@LogStep
     protected List<TimeSeriesPoint> findMatchingPoints(List<TimeSeriesPoint> primaryPoints, List<TimeSeriesPoint> relatedPoints) {
         List<TimeSeriesPoint> matchingPoints = new ArrayList<>();
         
@@ -99,7 +95,6 @@ public class MinMaxBuilderService {
         return matchingPoints;
     }
 
-	@LogStep
     protected Map<Instant, TimeSeriesPoint> pointListToMap(List<TimeSeriesPoint> pointList) {
     	try {
 	        if(pointList != null && !pointList.isEmpty()) {
