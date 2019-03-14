@@ -43,6 +43,11 @@ management:
 eureka:
   client:
     enabled: false
+    
+logging:
+  level:
+    org:
+      springframework: ${aqcu_springFrameworkLogLevel}
 
 feign:
   hystrix:

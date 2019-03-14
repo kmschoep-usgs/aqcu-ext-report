@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
 - AQ Qualifiers remapped to Extremes report-specific Qualifier model
 - Qualifiers for daily value timeseries have time removed from date
+- Add performance logging for report builder
+- Add debug log statements
+- Add additional try/catch error logging
+- Enable logging of application
+- update aqcu-framework version to 0.0.6-SNAPSHOT
 
 ## [0.0.1] - 2019-03-01
 ### Added
