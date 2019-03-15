@@ -47,7 +47,7 @@ eureka:
 logging:
   level:
     org:
-      springframework: ${aqcu_springFrameworkLogLevel}
+      springframework: ${springFrameworkLogLevel}
 
 feign:
   hystrix:
