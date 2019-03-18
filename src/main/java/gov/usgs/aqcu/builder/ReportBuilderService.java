@@ -28,7 +28,7 @@ import gov.usgs.aqcu.retrieval.QualifierLookupService;
 import gov.usgs.aqcu.retrieval.TimeSeriesDataService;
 import gov.usgs.aqcu.retrieval.TimeSeriesDescriptionListService;
 import gov.usgs.aqcu.util.AqcuTimeUtils;
-import gov.usgs.aqcu.util.LogReportExecutionTime;
+import gov.usgs.aqcu.util.LogExecutionTime;
 import gov.usgs.aqcu.util.TimeSeriesUtils;
 
 @Service
@@ -59,7 +59,7 @@ public class ReportBuilderService {
 		this.qualifierLookupService = qualifierLookupService;
 	}
 	
-	@LogReportExecutionTime
+	@LogExecutionTime
 	public ExtremesReport buildReport(ExtremesRequestParameters requestParameters, String requestingUser) {
 		ExtremesReport report = new ExtremesReport();
 		ExtremesMinMax primaryOutput = new ExtremesMinMax();
