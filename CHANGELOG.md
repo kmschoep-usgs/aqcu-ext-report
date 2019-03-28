@@ -6,7 +6,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 ### Added
+- Merged in Docker configuration
 
+### Changed
+
+
+## [0.0.2] - 2019-03-27
 ### Changed
 - AQ Qualifiers remapped to Extremes report-specific Qualifier model
 - Qualifiers for daily value timeseries have time removed from date
@@ -31,4 +36,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Removed
 - Disabled TLS 1.0/1.1 by default.
 
-[Unreleased]: https://github.com/USGS-CIDA/aqcu-ext-report/compare/aqcu-ext-report-0.0.1...master
+[Unreleased]: https://github.com/USGS-CIDA/aqcu-ext-report/compare/aqcu-ext-report-0.0.2...master
+[0.0.2] https://github.com/USGS-CIDA/aqcu-ext-report/compare/aqcu-ext-report-0.0.1...aqcu-ext-report-0.0.2
+
