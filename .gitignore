@@ -5,3 +5,11 @@
 /.project
 /.settings
 /.vscode
+**/*.jks
+**/*.p12
+**/*.crt
+**/*.csr
+**/*.chain
+**/*.key
+docker/certificates/intermediate1
+docker/certificates/root
