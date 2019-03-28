@@ -3,15 +3,15 @@
 
 [![Build Status](https://travis-ci.org/USGS-CIDA/aqcu-ext-report.svg?branch=master)](https://travis-ci.org/USGS-CIDA/aqcu-ext-report) [![Coverage Status](https://coveralls.io/repos/github/USGS-CIDA/aqcu-ext-report/badge.svg?branch=master)](https://coveralls.io/github/USGS-CIDA/aqcu-ext-report?branch=master)
 
-## Aquarius Customization - Time Series Summary Report
+## Aquarius Customization - Extremes Report
 
-This report provides a tabular and interactive summary of all actions applied to a selected time series. 
+Tabular report which shows min/max of a given timeseries and period.
 
 It is built as a Docker container.
 
 Configured functionality includes:
 
-- **Swagger API Documentation** https://localhost:7501/swagger-ui.html
+- **Swagger API Documentation** https://localhost:7507/swagger-ui.html
 
 ## Running the Application
 
