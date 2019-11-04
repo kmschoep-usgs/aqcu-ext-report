@@ -16,8 +16,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import gov.usgs.aqcu.model.TimeSeriesMinMax;
-import gov.usgs.aqcu.util.DoubleWithDisplayUtil;
-
 @Service
 public class MinMaxBuilderService {
 	private Logger log = LoggerFactory.getLogger(MinMaxBuilderService.class);
@@ -33,7 +31,7 @@ public class MinMaxBuilderService {
         try {
 	        if(points != null && !points.isEmpty()) {
 	            for(TimeSeriesPoint point : points) {
-	                BigDecimal pointValue = DoubleWithDisplayUtil.getRoundedValue(point.getValue());
+	                BigDecimal pointValue = BigDecimal.valueOf(point.getValue().getNumeric());
 	
 	                // Check for Max
 	                if(maxValue == null || pointValue.compareTo(maxValue) > 0) {

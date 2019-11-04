@@ -7,7 +7,6 @@ import java.time.temporal.Temporal;
 import com.aquaticinformatics.aquarius.sdk.timeseries.servicemodels.Publish.TimeSeriesPoint;
 
 import gov.usgs.aqcu.util.AqcuTimeUtils;
-import gov.usgs.aqcu.util.DoubleWithDisplayUtil;
 
 /** 
  * This class is a substitute for com.aquaticinformatics.aquarius.sdk.timeseries.servicemodels.Publish.TimeSeriesPoint
@@ -27,7 +26,7 @@ public class ExtremesPoint {
 		}
 
 		if(source.getValue() != null) {
-			setValue(DoubleWithDisplayUtil.getRoundedValue(source.getValue()));
+			setValue(BigDecimal.valueOf(source.getValue().getNumeric()));
 		}
 	}
 
