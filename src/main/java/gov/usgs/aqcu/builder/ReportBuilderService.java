@@ -240,7 +240,7 @@ public class ReportBuilderService {
 		if (isDaily) {
 			multipleMinMax = points.stream()
 				.noneMatch(p -> p.getValue().getDisplay().equals(extremePoint.getValue().getDisplay())
-						&& p.getTimestamp().DateTimeOffset != extremePoint.getTimestamp().DateTimeOffset);
+						&& p.getTimestamp().DateTimeOffset.compareTo(extremePoint.getTimestamp().DateTimeOffset) == 0);
 		}
 		
 		return !multipleMinMax;
