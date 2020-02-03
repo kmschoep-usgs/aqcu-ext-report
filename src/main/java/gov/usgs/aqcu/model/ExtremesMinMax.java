@@ -8,7 +8,9 @@ public class ExtremesMinMax {
 	public static final String MIN_MAX_POINTS_KEY = "points";
 
 	private Map<String, List<ExtremesPoint>> min;
+	private Boolean multipleMinFlag;
 	private Map<String, List<ExtremesPoint>> max;
+	private Boolean multipleMaxFlag;
 	private List<ExtremesQualifier> qualifiers;
 	
 	public Map<String, List<ExtremesPoint>> getMin() {
@@ -19,12 +21,28 @@ public class ExtremesMinMax {
 		this.min = val;
 	}
 	
+	public Boolean getMultipleMinFlag() {
+		return multipleMinFlag;
+	}
+
+	public void setMultipleMinFlag(Boolean multipleMinFlag) {
+		this.multipleMinFlag = multipleMinFlag;
+	}
+
 	public Map<String, List<ExtremesPoint>> getMax() {
 		return max;
 	}
 	
 	public void setMax(Map<String, List<ExtremesPoint>> val) {
 		this.max = val;
+	}
+	
+	public Boolean getMultipleMaxFlag() {
+		return multipleMaxFlag;
+	}
+
+	public void setMultipleMaxFlag(Boolean multipleMaxFlag) {
+		this.multipleMaxFlag = multipleMaxFlag;
 	}
 	
 	public List<ExtremesQualifier> getQualifiers() {

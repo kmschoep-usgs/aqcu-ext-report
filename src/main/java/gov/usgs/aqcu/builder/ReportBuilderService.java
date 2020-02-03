@@ -64,7 +64,7 @@ public class ReportBuilderService {
 	ExtremesReport report = new ExtremesReport();
 	ExtremesMinMax primaryOutput = new ExtremesMinMax();
 	ExtremesMinMax upchainOutput = new ExtremesMinMax();
-	ExtremesMinMax derviedOutput = new ExtremesMinMax();
+	ExtremesMinMax derivedOutput = new ExtremesMinMax();
 	List<Qualifier> qualifiers = new ArrayList<>();
 	
 		// All TS Metadata
@@ -87,7 +87,9 @@ public class ReportBuilderService {
 		if(primaryData != null && !primaryData.getPoints().isEmpty()) {
 			primaryMinMax = minMaxBuilderService.findMinMaxPoints(primaryData.getPoints());
 			primaryOutput.setMaxPoints(getExtremesPoints(primaryMinMax.getMaxPoints(), primaryIsDaily, primaryZoneOffset));
+			primaryOutput.setMultipleMaxFlag(getMultipleMinMaxFlag(primaryMinMax.getMaxPoints().get(0),primaryData.getPoints(), primaryIsDaily));
 			primaryOutput.setMinPoints(getExtremesPoints(primaryMinMax.getMinPoints(), primaryIsDaily, primaryZoneOffset));
+			primaryOutput.setMultipleMinFlag(getMultipleMinMaxFlag(primaryMinMax.getMinPoints().get(0),primaryData.getPoints(), primaryIsDaily));
 			primaryOutput.setQualifiers(getExtremesQualifiers(primaryData.getQualifiers(), primaryIsDaily, primaryZoneOffset));
 			qualifiers.addAll(primaryData.getQualifiers());
 		}
@@ -105,7 +107,9 @@ public class ReportBuilderService {
 			if(upchainData != null && !upchainData.getPoints().isEmpty()) {
 				TimeSeriesMinMax upchainMinMax = minMaxBuilderService.findMinMaxPoints(upchainData.getPoints());
 				upchainOutput.setMaxPoints(getExtremesPoints(upchainMinMax.getMaxPoints(), upchainIsDaily, upchainZoneOffset));
+				upchainOutput.setMultipleMaxFlag(getMultipleMinMaxFlag(upchainMinMax.getMaxPoints().get(0),upchainData.getPoints(), upchainIsDaily));
 				upchainOutput.setMinPoints(getExtremesPoints(upchainMinMax.getMinPoints(), upchainIsDaily, upchainZoneOffset));
+				upchainOutput.setMultipleMinFlag(getMultipleMinMaxFlag(upchainMinMax.getMinPoints().get(0),upchainData.getPoints(), upchainIsDaily));
 				upchainOutput.setQualifiers(getExtremesQualifiers(upchainData.getQualifiers(), upchainIsDaily, upchainZoneOffset));
 				qualifiers.addAll(upchainData.getQualifiers());
 
@@ -134,21 +138,23 @@ public class ReportBuilderService {
 			}
 		}
 		
-		// Dervied TS Data
+		// derived TS Data
 		log.debug("Get derived time series description/data/min max points");
-		TimeSeriesDescription derviedDescription = timeSeriesDescriptions.get(requestParameters.getDerivedTimeseriesIdentifier());
+		TimeSeriesDescription derivedDescription = timeSeriesDescriptions.get(requestParameters.getDerivedTimeseriesIdentifier());
 		TimeSeriesDataServiceResponse derivedData = null;
 
-		if(derviedDescription != null) {
-			ZoneOffset derviedZoneOffset = TimeSeriesUtils.getZoneOffset(derviedDescription);
+		if(derivedDescription != null) {
+			ZoneOffset derivedZoneOffset = TimeSeriesUtils.getZoneOffset(derivedDescription);
 			derivedData = timeSeriesDataService
-				.get(derviedDescription.getUniqueId(), requestParameters,  derviedZoneOffset, true, false, false, null);
+				.get(derivedDescription.getUniqueId(), requestParameters,  derivedZoneOffset, true, false, false, null);
 
 			if(derivedData != null && !derivedData.getPoints().isEmpty()) {
 				TimeSeriesMinMax derivedMinMax = minMaxBuilderService.findMinMaxPoints(derivedData.getPoints());
-				derviedOutput.setMaxPoints(getExtremesPoints(derivedMinMax.getMaxPoints(), true, derviedZoneOffset));
-				derviedOutput.setMinPoints(getExtremesPoints(derivedMinMax.getMinPoints(), true, derviedZoneOffset));
-				derviedOutput.setQualifiers(getExtremesQualifiers(derivedData.getQualifiers(), true, derviedZoneOffset));
+				derivedOutput.setMaxPoints(getExtremesPoints(derivedMinMax.getMaxPoints(), true, derivedZoneOffset));
+				derivedOutput.setMultipleMaxFlag(getMultipleMinMaxFlag(derivedMinMax.getMaxPoints().get(0),derivedData.getPoints(), true));
+				derivedOutput.setMinPoints(getExtremesPoints(derivedMinMax.getMinPoints(), true, derivedZoneOffset));
+				derivedOutput.setMultipleMinFlag(getMultipleMinMaxFlag(derivedMinMax.getMinPoints().get(0),derivedData.getPoints(), true));
+				derivedOutput.setQualifiers(getExtremesQualifiers(derivedData.getQualifiers(), true, derivedZoneOffset));
 				qualifiers.addAll(derivedData.getQualifiers());
 			}
 		}
@@ -156,7 +162,7 @@ public class ReportBuilderService {
 		// Output to report
 		report.setPrimary(primaryOutput);
 		report.setUpchain(upchainOutput);
-		report.setDv(derviedOutput);
+		report.setDv(derivedOutput);
 
 		//Report Metadata
 		report.setReportMetadata(getReportMetadata(requestParameters,
@@ -227,5 +233,16 @@ public class ReportBuilderService {
 		}
 		return metadata;
 	}
-
+	
+	protected Boolean getMultipleMinMaxFlag(TimeSeriesPoint extremePoint, List<TimeSeriesPoint> points, Boolean isDaily) {
+		boolean multipleMinMax = true;
+		
+		if (isDaily) {
+			multipleMinMax = points.stream()
+				.noneMatch(p -> p.getValue().getDisplay().equals(extremePoint.getValue().getDisplay())
+						&& p.getTimestamp().DateTimeOffset != extremePoint.getTimestamp().DateTimeOffset);
+		}
+		
+		return !multipleMinMax;
+	}
 }
