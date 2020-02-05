@@ -2,6 +2,7 @@ package gov.usgs.aqcu.builder;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -40,6 +41,7 @@ import gov.usgs.aqcu.retrieval.QualifierLookupService;
 import gov.usgs.aqcu.retrieval.TimeSeriesDataService;
 import gov.usgs.aqcu.retrieval.TimeSeriesDescriptionListService;
 import gov.usgs.aqcu.util.AqcuTimeUtils;
+import gov.usgs.aqcu.util.DoubleWithDisplayUtil;
 
 @RunWith(SpringRunner.class)
 public class ReportBuilderServiceTest {
@@ -150,12 +152,30 @@ public class ReportBuilderServiceTest {
 	private ArrayList<TimeSeriesPoint> derivedPoints = new ArrayList<>(Arrays.asList(
 		new TimeSeriesPoint()
 			.setTimestamp(new StatisticalDateTimeOffset()
-				.setDateTimeOffset(Instant.parse("2018-01-02T00:00:00Z"))
+				.setDateTimeOffset(Instant.parse("2018-01-01T00:00:00Z"))
 				.setRepresentsEndOfTimePeriod(true)
 			)
 			.setValue(new DoubleWithDisplay()
 				.setDisplay("1.0")
-				.setNumeric(1.0D)
+				.setNumeric(0.8D)
+			),
+		new TimeSeriesPoint()
+			.setTimestamp(new StatisticalDateTimeOffset()
+				.setDateTimeOffset(Instant.parse("2018-01-02T00:00:00Z"))
+				.setRepresentsEndOfTimePeriod(true)
+			)
+			.setValue(new DoubleWithDisplay()
+				.setDisplay("2.0")
+				.setNumeric(2.0D)
+			),
+		new TimeSeriesPoint()
+			.setTimestamp(new StatisticalDateTimeOffset()
+				.setDateTimeOffset(Instant.parse("2018-01-03T00:00:00Z"))
+				.setRepresentsEndOfTimePeriod(true)
+			)
+			.setValue(new DoubleWithDisplay()
+				.setDisplay("2.0")
+				.setNumeric(1.9D)
 			)
 	));
 	private Qualifier qual1 = new Qualifier().setIdentifier("qual1");
@@ -226,7 +246,6 @@ public class ReportBuilderServiceTest {
 		assertEquals(result.getPrimary().getMin().keySet().size(), 1);
 		assertEquals(result.getPrimary().getMax().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).size(), 2);
 		assertEquals(result.getPrimary().getMax().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).get(0).getValue(), BigDecimal.valueOf(2.0D));
-		assertEquals(result.getPrimary().getMax().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).get(1).getValue(), BigDecimal.valueOf(2.0D));
 		assertEquals(result.getPrimary().getMin().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).size(), 1);
 		assertEquals(result.getPrimary().getMin().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).get(0).getValue(), BigDecimal.valueOf(0.5D));
 		assertEquals(result.getPrimary().getMax().get(ReportBuilderService.UPCHAIN_RELATED_KEY).size(), 2);
@@ -253,12 +272,14 @@ public class ReportBuilderServiceTest {
 		assertEquals(result.getDv().getMax().keySet().size(), 1);
 		assertEquals(result.getDv().getMin().keySet().size(), 1);
 		assertEquals(result.getDv().getMax().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).size(), 1);
-		assertEquals(result.getDv().getMax().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).get(0).getValue(), BigDecimal.valueOf(1.0D));
+		assertEquals(result.getDv().getMax().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).get(0).getValue(), BigDecimal.valueOf(2.0D));
 		assertEquals(result.getDv().getMax().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).get(0).getTime(), LocalDate.parse("2018-01-01"));
 		assertEquals(result.getDv().getMin().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).size(), 1);
 		assertEquals(result.getDv().getMin().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).get(0).getValue(), BigDecimal.valueOf(1.0D));
-		assertEquals(result.getDv().getMin().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).get(0).getTime(), LocalDate.parse("2018-01-01"));
+		assertEquals(result.getDv().getMin().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).get(0).getTime(), LocalDate.parse("2017-12-31"));
 		assertEquals(LocalDate.parse("2018-03-05"), result.getDv().getQualifiers().get(0).getEndTime());
+		assertTrue(result.getDv().getMultipleMaxFlag());
+	
 
 		// Verify Metadata
 		assertEquals(result.getReportMetadata().getTitle(), ReportBuilderService.REPORT_TITLE);
@@ -323,11 +344,11 @@ public class ReportBuilderServiceTest {
 		assertEquals(result.getDv().getMax().keySet().size(), 1);
 		assertEquals(result.getDv().getMin().keySet().size(), 1);
 		assertEquals(result.getDv().getMax().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).size(), 1);
-		assertEquals(result.getDv().getMax().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).get(0).getValue(), BigDecimal.valueOf(1.0D));
+		assertEquals(result.getDv().getMax().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).get(0).getValue(), BigDecimal.valueOf(2.0D));
 		assertEquals(result.getDv().getMax().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).get(0).getTime(), LocalDate.parse("2018-01-01"));
 		assertEquals(result.getDv().getMin().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).size(), 1);
 		assertEquals(result.getDv().getMin().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).get(0).getValue(), BigDecimal.valueOf(1.0D));
-		assertEquals(result.getDv().getMin().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).get(0).getTime(), LocalDate.parse("2018-01-01"));
+		assertEquals(result.getDv().getMin().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).get(0).getTime(), LocalDate.parse("2017-12-31"));
 
 		// Verify Metadata
 		assertEquals(result.getReportMetadata().getTitle(), ReportBuilderService.REPORT_TITLE);
@@ -393,11 +414,11 @@ public class ReportBuilderServiceTest {
 		assertEquals(result.getDv().getMax().keySet().size(), 1);
 		assertEquals(result.getDv().getMin().keySet().size(), 1);
 		assertEquals(result.getDv().getMax().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).size(), 1);
-		assertEquals(result.getDv().getMax().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).get(0).getValue(), BigDecimal.valueOf(1.0D));
+		assertEquals(result.getDv().getMax().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).get(0).getValue(), BigDecimal.valueOf(2.0D));
 		assertEquals(result.getDv().getMax().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).get(0).getTime(), LocalDate.parse("2018-01-01"));
 		assertEquals(result.getDv().getMin().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).size(), 1);
 		assertEquals(result.getDv().getMin().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).get(0).getValue(), BigDecimal.valueOf(1.0D));
-		assertEquals(result.getDv().getMin().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).get(0).getTime(), LocalDate.parse("2018-01-01"));
+		assertEquals(result.getDv().getMin().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).get(0).getTime(), LocalDate.parse("2017-12-31"));
 
 		// Verify Metadata
 		assertEquals(result.getReportMetadata().getTitle(), ReportBuilderService.REPORT_TITLE);
@@ -588,11 +609,11 @@ public class ReportBuilderServiceTest {
 		assertEquals(result.getDv().getMax().keySet().size(), 1);
 		assertEquals(result.getDv().getMin().keySet().size(), 1);
 		assertEquals(result.getDv().getMax().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).size(), 1);
-		assertEquals(result.getDv().getMax().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).get(0).getValue(), BigDecimal.valueOf(1.0D));
+		assertEquals(result.getDv().getMax().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).get(0).getValue(), BigDecimal.valueOf(2.0D));
 		assertEquals(result.getDv().getMax().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).get(0).getTime(), LocalDate.parse("2018-01-01"));
 		assertEquals(result.getDv().getMin().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).size(), 1);
 		assertEquals(result.getDv().getMin().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).get(0).getValue(), BigDecimal.valueOf(1.0D));
-		assertEquals(result.getDv().getMin().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).get(0).getTime(), LocalDate.parse("2018-01-01"));
+		assertEquals(result.getDv().getMin().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).get(0).getTime(), LocalDate.parse("2017-12-31"));
 
 		// Verify Metadata
 		assertEquals(result.getReportMetadata().getTitle(), ReportBuilderService.REPORT_TITLE);
@@ -741,9 +762,13 @@ public class ReportBuilderServiceTest {
 		assertEquals(result.get(2).getValue(), BigDecimal.valueOf(upchainPoints.get(2).getValue().getNumeric()));
 		assertEquals(result.get(2).getTime(), upchainPoints.get(2).getTimestamp().getDateTimeOffset());
 		result = service.getExtremesPoints(derivedPoints, true, ZoneOffset.UTC);
-		assertEquals(result.size(), 1);
-		assertEquals(result.get(0).getValue(), BigDecimal.valueOf(derivedPoints.get(0).getValue().getNumeric()));
-		assertEquals(result.get(0).getTime(), LocalDate.parse("2018-01-01"));
+		assertEquals(result.size(), 3);
+		assertEquals(result.get(0).getValue(), DoubleWithDisplayUtil.getRoundedValue(derivedPoints.get(0).getValue()));
+		assertEquals(result.get(1).getValue(), DoubleWithDisplayUtil.getRoundedValue(derivedPoints.get(1).getValue()));
+		assertEquals(result.get(2).getValue(), DoubleWithDisplayUtil.getRoundedValue(derivedPoints.get(2).getValue()));
+		assertEquals(result.get(0).getTime(), LocalDate.parse("2017-12-31"));
+		assertEquals(result.get(1).getTime(), LocalDate.parse("2018-01-01"));
+		assertEquals(result.get(2).getTime(), LocalDate.parse("2018-01-02"));
 	}
 
 	@Test
