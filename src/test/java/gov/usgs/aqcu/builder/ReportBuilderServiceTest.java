@@ -3,6 +3,7 @@ package gov.usgs.aqcu.builder;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -95,6 +96,15 @@ public class ReportBuilderServiceTest {
 		new TimeSeriesPoint()
 			.setTimestamp(new StatisticalDateTimeOffset()
 				.setDateTimeOffset(Instant.parse("2018-01-02T00:00:00Z"))
+				.setRepresentsEndOfTimePeriod(false)
+			)
+			.setValue(new DoubleWithDisplay()
+				.setDisplay("2.0")
+				.setNumeric(2.0D)
+			),
+		new TimeSeriesPoint()
+			.setTimestamp(new StatisticalDateTimeOffset()
+				.setDateTimeOffset(Instant.parse("2018-01-02T10:00:00Z"))
 				.setRepresentsEndOfTimePeriod(false)
 			)
 			.setValue(new DoubleWithDisplay()
@@ -244,7 +254,7 @@ public class ReportBuilderServiceTest {
 		// Verify Primary Data
 		assertEquals(result.getPrimary().getMax().keySet().size(), 2);
 		assertEquals(result.getPrimary().getMin().keySet().size(), 1);
-		assertEquals(result.getPrimary().getMax().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).size(), 2);
+		assertEquals(result.getPrimary().getMax().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).size(), 3);
 		assertEquals(result.getPrimary().getMax().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).get(0).getValue(), BigDecimal.valueOf(2.0D));
 		assertEquals(result.getPrimary().getMin().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).size(), 1);
 		assertEquals(result.getPrimary().getMin().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).get(0).getValue(), BigDecimal.valueOf(0.5D));
@@ -254,6 +264,7 @@ public class ReportBuilderServiceTest {
 		assertNull(result.getPrimary().getMin().get(ReportBuilderService.UPCHAIN_RELATED_KEY));
 		assertEquals(Instant.parse("2018-01-03T00:00:00Z"), result.getPrimary().getQualifiers().get(0).getEndTime());
 		assertEquals(Instant.parse("2018-02-04T00:00:00Z"), result.getPrimary().getQualifiers().get(1).getEndTime());
+		assertTrue(result.getPrimary().getMultipleMaxFlag());
 
 		// Verify Upchain Data
 		assertEquals(result.getUpchain().getMax().keySet().size(), 2);
@@ -267,6 +278,7 @@ public class ReportBuilderServiceTest {
 		assertEquals(result.getUpchain().getMin().get(ReportBuilderService.PRIMARY_RELATED_KEY).size(), 1);
 		assertEquals(result.getUpchain().getMin().get(ReportBuilderService.PRIMARY_RELATED_KEY).get(0).getValue(), BigDecimal.valueOf(1.0D));
 		assertEquals(Instant.parse("2018-01-03T00:00:00Z"), result.getUpchain().getQualifiers().get(0).getEndTime());
+		assertFalse(result.getUpchain().getMultipleMaxFlag());
 
 		// Verify Derived Data
 		assertEquals(result.getDv().getMax().keySet().size(), 1);
@@ -398,7 +410,7 @@ public class ReportBuilderServiceTest {
 		// Verify Primary Data
 		assertEquals(result.getPrimary().getMax().keySet().size(), 1);
 		assertEquals(result.getPrimary().getMin().keySet().size(), 1);
-		assertEquals(result.getPrimary().getMax().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).size(), 2);
+		assertEquals(result.getPrimary().getMax().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).size(), 3);
 		assertEquals(result.getPrimary().getMax().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).get(0).getValue(), BigDecimal.valueOf(2.0D));
 		assertEquals(result.getPrimary().getMax().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).get(1).getValue(), BigDecimal.valueOf(2.0D));
 		assertEquals(result.getPrimary().getMin().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).size(), 1);
@@ -468,7 +480,7 @@ public class ReportBuilderServiceTest {
 		// Verify Primary Data
 		assertEquals(result.getPrimary().getMax().keySet().size(), 2);
 		assertEquals(result.getPrimary().getMin().keySet().size(), 1);
-		assertEquals(result.getPrimary().getMax().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).size(), 2);
+		assertEquals(result.getPrimary().getMax().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).size(), 3);
 		assertEquals(result.getPrimary().getMax().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).get(0).getValue(), BigDecimal.valueOf(2.0D));
 		assertEquals(result.getPrimary().getMax().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).get(1).getValue(), BigDecimal.valueOf(2.0D));
 		assertEquals(result.getPrimary().getMin().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).size(), 1);
@@ -593,7 +605,7 @@ public class ReportBuilderServiceTest {
 		// Verify Primary Data
 		assertEquals(result.getPrimary().getMax().keySet().size(), 1);
 		assertEquals(result.getPrimary().getMin().keySet().size(), 1);
-		assertEquals(result.getPrimary().getMax().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).size(), 2);
+		assertEquals(result.getPrimary().getMax().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).size(), 3);
 		assertEquals(result.getPrimary().getMax().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).get(0).getValue(), BigDecimal.valueOf(2.0D));
 		assertEquals(result.getPrimary().getMax().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).get(1).getValue(), BigDecimal.valueOf(2.0D));
 		assertEquals(result.getPrimary().getMin().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).size(), 1);
@@ -656,7 +668,7 @@ public class ReportBuilderServiceTest {
 		// Verify Primary Data
 		assertEquals(result.getPrimary().getMax().keySet().size(), 2);
 		assertEquals(result.getPrimary().getMin().keySet().size(), 1);
-		assertEquals(result.getPrimary().getMax().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).size(), 2);
+		assertEquals(result.getPrimary().getMax().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).size(), 3);
 		assertEquals(result.getPrimary().getMax().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).get(0).getValue(), BigDecimal.valueOf(2.0D));
 		assertEquals(result.getPrimary().getMax().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).get(1).getValue(), BigDecimal.valueOf(2.0D));
 		assertEquals(result.getPrimary().getMin().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).size(), 1);
@@ -717,7 +729,7 @@ public class ReportBuilderServiceTest {
 		// Verify Primary Data
 		assertEquals(result.getPrimary().getMax().keySet().size(), 1);
 		assertEquals(result.getPrimary().getMin().keySet().size(), 1);
-		assertEquals(result.getPrimary().getMax().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).size(), 2);
+		assertEquals(result.getPrimary().getMax().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).size(), 3);
 		assertEquals(result.getPrimary().getMax().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).get(0).getValue(), BigDecimal.valueOf(2.0D));
 		assertEquals(result.getPrimary().getMax().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).get(1).getValue(), BigDecimal.valueOf(2.0D));
 		assertEquals(result.getPrimary().getMin().get(ExtremesMinMax.MIN_MAX_POINTS_KEY).size(), 1);
@@ -744,7 +756,7 @@ public class ReportBuilderServiceTest {
 	@Test
 	public void getExtremesPointsTest() {
 		List<ExtremesPoint> result = service.getExtremesPoints(primaryPoints, false, ZoneOffset.UTC);
-		assertEquals(result.size(), 4);
+		assertEquals(result.size(), 5);
 		assertEquals(result.get(0).getValue(), BigDecimal.valueOf(primaryPoints.get(0).getValue().getNumeric()));
 		assertEquals(result.get(0).getTime(), primaryPoints.get(0).getTimestamp().getDateTimeOffset());
 		assertEquals(result.get(1).getValue(), BigDecimal.valueOf(primaryPoints.get(1).getValue().getNumeric()));

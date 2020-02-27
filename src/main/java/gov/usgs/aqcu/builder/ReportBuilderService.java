@@ -87,9 +87,9 @@ public class ReportBuilderService {
 		if(primaryData != null && !primaryData.getPoints().isEmpty()) {
 			primaryMinMax = minMaxBuilderService.findMinMaxPoints(primaryData.getPoints());
 			primaryOutput.setMaxPoints(getExtremesPoints(primaryMinMax.getMaxPoints(), primaryIsDaily, primaryZoneOffset));
-			primaryOutput.setMultipleMaxFlag(getMultipleMinMaxFlag(primaryMinMax.getMaxPoints().get(0),primaryData.getPoints(), primaryIsDaily));
+			primaryOutput.setMultipleMaxFlag(getMultipleMinMaxFlag(primaryMinMax.getMaxPoints().get(0),primaryData.getPoints()));
 			primaryOutput.setMinPoints(getExtremesPoints(primaryMinMax.getMinPoints(), primaryIsDaily, primaryZoneOffset));
-			primaryOutput.setMultipleMinFlag(getMultipleMinMaxFlag(primaryMinMax.getMinPoints().get(0),primaryData.getPoints(), primaryIsDaily));
+			primaryOutput.setMultipleMinFlag(getMultipleMinMaxFlag(primaryMinMax.getMinPoints().get(0),primaryData.getPoints()));
 			primaryOutput.setQualifiers(getExtremesQualifiers(primaryData.getQualifiers(), primaryIsDaily, primaryZoneOffset));
 			qualifiers.addAll(primaryData.getQualifiers());
 		}
@@ -107,9 +107,9 @@ public class ReportBuilderService {
 			if(upchainData != null && !upchainData.getPoints().isEmpty()) {
 				TimeSeriesMinMax upchainMinMax = minMaxBuilderService.findMinMaxPoints(upchainData.getPoints());
 				upchainOutput.setMaxPoints(getExtremesPoints(upchainMinMax.getMaxPoints(), upchainIsDaily, upchainZoneOffset));
-				upchainOutput.setMultipleMaxFlag(getMultipleMinMaxFlag(upchainMinMax.getMaxPoints().get(0),upchainData.getPoints(), upchainIsDaily));
+				upchainOutput.setMultipleMaxFlag(getMultipleMinMaxFlag(upchainMinMax.getMaxPoints().get(0),upchainData.getPoints()));
 				upchainOutput.setMinPoints(getExtremesPoints(upchainMinMax.getMinPoints(), upchainIsDaily, upchainZoneOffset));
-				upchainOutput.setMultipleMinFlag(getMultipleMinMaxFlag(upchainMinMax.getMinPoints().get(0),upchainData.getPoints(), upchainIsDaily));
+				upchainOutput.setMultipleMinFlag(getMultipleMinMaxFlag(upchainMinMax.getMinPoints().get(0),upchainData.getPoints()));
 				upchainOutput.setQualifiers(getExtremesQualifiers(upchainData.getQualifiers(), upchainIsDaily, upchainZoneOffset));
 				qualifiers.addAll(upchainData.getQualifiers());
 
@@ -151,9 +151,9 @@ public class ReportBuilderService {
 			if(derivedData != null && !derivedData.getPoints().isEmpty()) {
 				TimeSeriesMinMax derivedMinMax = minMaxBuilderService.findMinMaxPoints(derivedData.getPoints());
 				derivedOutput.setMaxPoints(getExtremesPoints(derivedMinMax.getMaxPoints(), true, derivedZoneOffset));
-				derivedOutput.setMultipleMaxFlag(getMultipleMinMaxFlag(derivedMinMax.getMaxPoints().get(0),derivedData.getPoints(), true));
+				derivedOutput.setMultipleMaxFlag(getMultipleMinMaxFlag(derivedMinMax.getMaxPoints().get(0),derivedData.getPoints()));
 				derivedOutput.setMinPoints(getExtremesPoints(derivedMinMax.getMinPoints(), true, derivedZoneOffset));
-				derivedOutput.setMultipleMinFlag(getMultipleMinMaxFlag(derivedMinMax.getMinPoints().get(0),derivedData.getPoints(), true));
+				derivedOutput.setMultipleMinFlag(getMultipleMinMaxFlag(derivedMinMax.getMinPoints().get(0),derivedData.getPoints()));
 				derivedOutput.setQualifiers(getExtremesQualifiers(derivedData.getQualifiers(), true, derivedZoneOffset));
 				qualifiers.addAll(derivedData.getQualifiers());
 			}
@@ -234,15 +234,18 @@ public class ReportBuilderService {
 		return metadata;
 	}
 	
-	protected Boolean getMultipleMinMaxFlag(TimeSeriesPoint extremePoint, List<TimeSeriesPoint> points, Boolean isDaily) {
-		boolean multipleMinMax = true;
+	protected Boolean getMultipleMinMaxFlag(TimeSeriesPoint extremePoint, List<TimeSeriesPoint> points) {
+		boolean multipleMinMax = false;
 		
-		if (isDaily) {
-			multipleMinMax = points.stream()
-				.noneMatch(p -> p.getValue().getDisplay().equals(extremePoint.getValue().getDisplay())
-						&& p.getTimestamp().DateTimeOffset.compareTo(extremePoint.getTimestamp().DateTimeOffset) == 0);
+		List<TimeSeriesPoint> multipleMinMaxPoints = points.stream()
+				.filter(p -> p.getValue().getDisplay().equals(extremePoint.getValue().getDisplay())
+						&& p.getTimestamp().DateTimeOffset.compareTo(extremePoint.getTimestamp().DateTimeOffset) != 0)
+				.collect(Collectors.toList());
+		
+		if (multipleMinMaxPoints.size() > 0) {
+			multipleMinMax = true;
 		}
 		
-		return !multipleMinMax;
+		return multipleMinMax;
 	}
 }
